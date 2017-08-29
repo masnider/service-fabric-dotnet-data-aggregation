@@ -16,7 +16,7 @@ namespace HealthMetrics.Common
     public class ServicePrimer
     {
         private static FabricClient fabricClient;
-        private readonly TimeSpan interval = TimeSpan.FromSeconds(5);
+        private readonly TimeSpan delayInterval = TimeSpan.FromSeconds(1);
 
         public ServicePrimer()
         {
@@ -54,11 +54,11 @@ namespace HealthMetrics.Common
                     }
 
                     ServicePartitionList partitions = await this.Client.QueryManager.GetPartitionListAsync(serviceInstanceUri);
-                    int replicaTotal = 0;
+
 
                     while (!token.IsCancellationRequested)
                     {
-                        replicaTotal = 0;
+                        int replicaTotal = 0;
                         foreach (Partition partition in partitions)
                         {
                             ServiceReplicaList replicaList = await this.Client.QueryManager.GetReplicaListAsync(partition.PartitionInformation.Id);
@@ -74,7 +74,7 @@ namespace HealthMetrics.Common
                 }
                 catch
                 {
-                    await Task.Delay(this.interval, token);
+                    await Task.Delay(this.delayInterval, token);
                     currentAttempt++;
                 }
             }

@@ -23,6 +23,7 @@
     <None Include="Scripts\HealthMetricsCleanup.ps1" />
     <None Include="Scripts\HealthMetricsConfigParamUpgrade.ps1" />
     <None Include="Scripts\HealthMetricsDeployment.ps1" />
+    <None Include="Scripts\Start-Service.ps1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\HealthMetrics.BandActor\HealthMetrics.BandActor.csproj" />
@@ -38,6 +39,8 @@
     <Content Include="ApplicationParameters\Local.1Node.xml" />
     <Content Include="ApplicationParameters\Local.5Node.xml" />
     <Content Include="packages.config" />
+    <Content Include="ApplicationParameters\Cloud.xml" />
+    <Content Include="PublishProfiles\Cloud.xml" />
     <Content Include="PublishProfiles\Local.1Node.xml" />
     <Content Include="PublishProfiles\Local.5Node.xml" />
     <Content Include="Scripts\HealthMetricsV2ConfigOnlyPackage\ApplicationManifest.xml" />
