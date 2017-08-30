@@ -3,8 +3,8 @@
   <Section Name="HealthMetrics.WebService.Settings">
     <Parameter Name="NationalServiceInstanceName" Value="HealthMetrics.NationalService" />
     <Parameter Name="CountyServiceInstanceName" Value="HealthMetrics.CountyService" />
-    <Parameter Name="DoctorActorServiceInstanceName" Value="DoctorActorService" />
-    <Parameter Name="BandActorServiceInstanceName" Value="BandActorService" />
+    <Parameter Name="DoctorActorServiceInstanceName" Value="HealthMetrics.DoctorActorService" />
+    <Parameter Name="BandActorServiceInstanceName" Value="HealthMetrics.BandActorService" />
     <Parameter Name="GenerateKnownPeople" Value="" MustOverride="true"/>
     <Parameter Name="KnownPatientId" Value="" MustOverride="true" />
     <Parameter Name="KnownDoctorId" Value="" MustOverride="true" />
