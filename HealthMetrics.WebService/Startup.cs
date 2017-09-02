@@ -8,6 +8,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Owin.StaticFiles;
+using Microsoft.AspNetCore.ResponseCompression;
+using System.IO.Compression;
 
 namespace HealthMetrics.WebService
 {
@@ -30,6 +32,16 @@ namespace HealthMetrics.WebService
         {
             // Add framework services.
             services.AddMvc();
+            services.AddResponseCompression(options =>
+            {
+                options.Providers.Add<GzipCompressionProvider>();
+            });
+
+            services.Configure<GzipCompressionProviderOptions>(options =>
+            {
+                options.Level = CompressionLevel.Optimal;
+            });
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -39,6 +51,7 @@ namespace HealthMetrics.WebService
             loggerFactory.AddDebug();
 
             app.UseStaticFiles();
+            
 
             app.UseMvc();
         }
