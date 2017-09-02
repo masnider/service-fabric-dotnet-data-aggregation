@@ -1,4 +1,4 @@
-﻿$cloud = $true
+﻿$cloud = $false
 $certSecure = $false
 $AADSecure = $true
 

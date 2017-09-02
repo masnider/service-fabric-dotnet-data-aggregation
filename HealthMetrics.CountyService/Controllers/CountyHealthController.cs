@@ -40,32 +40,30 @@ namespace HealthMetrics.CountyService
 
         [HttpGet]
         [Route("county/health/{countyId}")]
-        public async Task<IHttpActionResult> Get(int countyId)
+        public async Task<HealthIndex> Get(int countyId)
         {
             IReliableDictionary<Guid, CountyDoctorStats> countyHealth =
                 await this.stateManager.GetOrAddAsync<IReliableDictionary<Guid, CountyDoctorStats>>(
                     string.Format(Service.CountyHealthDictionaryName, countyId));
+            
+            IList<KeyValuePair<Guid, CountyDoctorStats>> doctorStats = new List<KeyValuePair<Guid, CountyDoctorStats>>();
 
             using (ITransaction tx = this.stateManager.CreateTransaction())
             {
-                if (await countyHealth.GetCountAsync(tx) > 0)
+                IAsyncEnumerator<KeyValuePair<Guid, CountyDoctorStats>> enumerator = (await countyHealth.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
+
+                while (await enumerator.MoveNextAsync(CancellationToken.None))
                 {
-                    IList<KeyValuePair<Guid, CountyDoctorStats>> doctorStats = new List<KeyValuePair<Guid, CountyDoctorStats>>();
-
-                    IAsyncEnumerator<KeyValuePair<Guid, CountyDoctorStats>> enumerator = (await countyHealth.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
-
-                    while (await enumerator.MoveNextAsync(CancellationToken.None))
-                    {
-                        doctorStats.Add(enumerator.Current);
-                    }
-
-                    return this.Ok(this.indexCalculator.ComputeAverageIndex(doctorStats.Select(x => x.Value.AverageHealthIndex)));
-                }
-                else
-                {
-                    return this.Ok(this.indexCalculator.ComputeIndex(-1));
+                    doctorStats.Add(enumerator.Current);
                 }
             }
+
+            if (doctorStats.Count > 0)
+            {
+                return this.indexCalculator.ComputeAverageIndex(doctorStats.Select(x => x.Value.AverageHealthIndex));
+            }
+
+            return this.indexCalculator.ComputeIndex(-1);
         }
 
         /// <summary>

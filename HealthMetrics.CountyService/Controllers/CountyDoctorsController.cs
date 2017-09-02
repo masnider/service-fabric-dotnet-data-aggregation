@@ -6,6 +6,7 @@
 namespace HealthMetrics.CountyService
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading;
@@ -36,14 +37,14 @@ namespace HealthMetrics.CountyService
         /// <returns></returns>
         [HttpGet]
         [Route("county/doctors/{countyId}")]
-        public async Task<IHttpActionResult> Get(int countyId)
+        public async Task<IEnumerable<KeyValuePair<Guid, CountyDoctorStats>>> Get(int countyId)
         {
             IReliableDictionary<Guid, CountyDoctorStats> countyHealth =
                 await this.stateManager.GetOrAddAsync<IReliableDictionary<Guid, CountyDoctorStats>>(
                     string.Format(Service.CountyHealthDictionaryName, countyId));
-
-            IList<KeyValuePair<Guid, CountyDoctorStats>> doctors = new List<KeyValuePair<Guid, CountyDoctorStats>>();
-
+            
+            List<KeyValuePair<Guid, CountyDoctorStats>> doctors = new List<KeyValuePair<Guid, CountyDoctorStats>>();
+            
             using (ITransaction tx = this.stateManager.CreateTransaction())
             {
                 IAsyncEnumerator<KeyValuePair<Guid, CountyDoctorStats>> enumerator = (await countyHealth.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
@@ -52,20 +53,15 @@ namespace HealthMetrics.CountyService
                 {
                     doctors.Add(enumerator.Current);
                 }
+
+                await tx.CommitAsync();
             }
 
-            var doctorInfo = doctors.Select(
-                (x) =>
-                {
-                    return new
-                    {
-                        DoctorId = x.Key,
-                        DoctorName = x.Value.DoctorName,
-                        HealthStatus = x.Value.AverageHealthIndex
-                    };
-                }).OrderByDescending((x) => x.HealthStatus);
+            //IEnumerable<KeyValuePair<Guid, CountyDoctorStats>> results = doctors.OrderByDescending((x) => x.Value.AverageHealthIndex);
 
-            return this.Ok(doctorInfo);
+            return doctors.OrderByDescending((x) => x.Value.AverageHealthIndex);
+
+
         }
     }
 }

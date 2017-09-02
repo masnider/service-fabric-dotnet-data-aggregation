@@ -69,7 +69,7 @@ namespace HealthMetrics.NationalService
         /// <returns></returns>
         [HttpGet]
         [Route("national/health")]
-        public async Task<IHttpActionResult> Get()
+        public async Task<List<CountyHealth>> Get()
         {
             IReliableDictionary<int, NationalCountyStats> dictionary =
                 await this.stateManager.GetOrAddAsync<IReliableDictionary<int, NationalCountyStats>>(HealthStatusDictionary);
@@ -95,7 +95,7 @@ namespace HealthMetrics.NationalService
                 this.updatedCounties.TryTake(out tmp);
             }
 
-            return this.Ok(countyData);
+            return countyData;
         }
     }
 }

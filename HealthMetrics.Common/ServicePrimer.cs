@@ -35,6 +35,12 @@ namespace HealthMetrics.Common
             }
         }
 
+        public Task WaitForStatefulService(Uri serviceInstanceUri, TimeSpan timespan)
+        {
+            CancellationTokenSource cts = new CancellationTokenSource(timespan);
+            return WaitForStatefulService(serviceInstanceUri, cts.Token);
+        }
+
         public async Task WaitForStatefulService(Uri serviceInstanceUri, CancellationToken token)
         {
             int maxRetryCount = 100;
@@ -50,7 +56,7 @@ namespace HealthMetrics.Common
                     int targetTotalReplicas = description.TargetReplicaSetSize;
                     if (description.PartitionSchemeDescription is UniformInt64RangePartitionSchemeDescription)
                     {
-                        targetTotalReplicas *= ((UniformInt64RangePartitionSchemeDescription) description.PartitionSchemeDescription).PartitionCount;
+                        targetTotalReplicas *= ((UniformInt64RangePartitionSchemeDescription)description.PartitionSchemeDescription).PartitionCount;
                     }
 
                     ServicePartitionList partitions = await this.Client.QueryManager.GetPartitionListAsync(serviceInstanceUri);

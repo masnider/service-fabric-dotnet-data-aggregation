@@ -26,7 +26,7 @@
     };
 
     this.GetIds = function (result) {
-        this.httpGetJson(this.serviceUrl + '/api/settings/GetIds', result);
+        this.httpGetJson(this.serviceUrl + '/api/GetIds', result);
     };
 
     this.httpGetJson = function (url, result) {

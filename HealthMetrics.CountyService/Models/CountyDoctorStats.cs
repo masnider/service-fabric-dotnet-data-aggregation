@@ -9,7 +9,7 @@ namespace HealthMetrics.CountyService
     using HealthMetrics.Common;
 
     [DataContract]
-    internal struct CountyDoctorStats
+    public struct CountyDoctorStats
     {
         public CountyDoctorStats(int patientCount, long healthReportCount, string doctorName, HealthIndex averageHealthIndex)
         {

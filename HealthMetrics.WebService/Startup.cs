@@ -1,69 +1,46 @@
-﻿// ------------------------------------------------------------
-//  Copyright (c) Microsoft Corporation.  All rights reserved.
-//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
-// ------------------------------------------------------------
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Owin.StaticFiles;
 
 namespace HealthMetrics.WebService
 {
-    using System;
-    using System.Diagnostics;
-    using System.Fabric;
-    using System.Web.Http;
-    using Microsoft.Owin;
-    using Microsoft.Owin.FileSystems;
-    using Microsoft.Owin.StaticFiles;
-    using Owin;
-    using Web.Service;
-
-    public class Startup : IOwinAppBuilder
+    public class Startup
     {
-        private readonly ServiceContext serviceContext;
-
-        public Startup(ServiceContext serviceContext)
+        public Startup(IHostingEnvironment env)
         {
-            this.serviceContext = serviceContext;
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(env.ContentRootPath)
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
+                .AddEnvironmentVariables();
+            Configuration = builder.Build();
         }
 
-        public void Configuration(IAppBuilder appBuilder)
+        public IConfigurationRoot Configuration { get; }
+
+        // This method gets called by the runtime. Use this method to add services to the container.
+        public void ConfigureServices(IServiceCollection services)
         {
-            HttpConfiguration config = new HttpConfiguration();
+            // Add framework services.
+            services.AddMvc();
+        }
 
-            config.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.Always;
-            config.MapHttpAttributeRoutes();
-            FormatterConfig.ConfigureFormatters(config.Formatters);
-            UnityConfig.RegisterComponents(config, this.serviceContext);
+        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        {
+            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
+            loggerFactory.AddDebug();
 
-            try
-            {
-                appBuilder.UseWebApi(config);
-                appBuilder.UseFileServer(
-                    new FileServerOptions()
-                    {
-                        EnableDefaultFiles = true,
-                        RequestPath = PathString.Empty,
-                        FileSystem = new PhysicalFileSystem(@".\wwwroot"),
-                    });
+            app.UseStaticFiles();
 
-                appBuilder.UseDefaultFiles(
-                    new DefaultFilesOptions()
-                    {
-                        DefaultFileNames = new[] {"healthmetrics/index.html"}
-                    });
-
-                appBuilder.UseStaticFiles(
-                    new StaticFileOptions()
-                    {
-                        FileSystem = new PhysicalFileSystem(@".\wwwroot\Content"),
-                        RequestPath = PathString.FromUriComponent(@"/Content"),
-                        ServeUnknownFileTypes = true
-                    });
-
-                config.EnsureInitialized();
-            }
-            catch (Exception e)
-            {
-                Trace.WriteLine(e);
-            }
+            app.UseMvc();
         }
     }
 }

@@ -23,16 +23,16 @@ function MetricsApp() {
 
     this.Initialize = function () {
 
-        var rollingAverage = {
-            currentAverage: 0,
-            currentCount: 0,
-            last: 0
-        };
-
         api.GetIds(function (result) {
-            var strings = result.split("|");
-            self.currentBandId = strings[0];
-            self.currentDoctorId = strings[1];
+
+            var rollingAverage = {
+                currentAverage: 0,
+                currentCount: 0,
+                last: 0
+            };
+
+            self.currentBandId = result.key;
+            self.currentDoctorId = result.value;
             self.SetUserContext();
             setInterval(function () { self.UpdateStats(rollingAverage); }, 1000);
             setInterval(self.UpdateUserInfo, 2000);
@@ -42,6 +42,14 @@ function MetricsApp() {
 
     this.UpdateStats = function (rollingAverage) {
 
+        var statsData = {
+            AverageHealthIndex: 0,
+            DoctorCount: 0,
+            PatientCount: 0,
+            HealthReportCount: 0,
+            StartTimeOffset: 0
+        };
+
         api.GetNationalStats(function (statsData) {
 
             var bandStats = $('#bandsStats');
@@ -50,24 +58,24 @@ function MetricsApp() {
             var messageRate = $('#messageRate')
 
             if (rollingAverage.currentCount == 0) {
-                var creationDate = new Date(statsData.StartTimeOffset);
+                var creationDate = new Date(statsData.startTimeOffset);
                 var now = new Date();
                 rollingAverage.currentCount = Math.round((now - creationDate) / 1000);
-                rollingAverage.currentAverage = Math.round((statsData.HealthReportCount / rollingAverage.currentCount) * 100) / 100;
+                rollingAverage.currentAverage = Math.round((statsData.healthReportCount / rollingAverage.currentCount) * 100) / 100;
             }
             else {
-                var diff = statsData.HealthReportCount - rollingAverage.last;
+                var diff = statsData.healthReportCount - rollingAverage.last;
                 var avg = rollingAverage.currentAverage * rollingAverage.currentCount;
                 var newCount = rollingAverage.currentCount + 1;
                 rollingAverage.currentAverage = Math.round(((avg + diff) / newCount) * 100) / 100;
                 rollingAverage.currentCount = newCount;                
             }
 
-            rollingAverage.last = statsData.HealthReportCount;
+            rollingAverage.last = statsData.healthReportCount;
 
-            bandStats.text(numberWithCommas(statsData.PatientCount));
-            doctorStats.text(numberWithCommas(statsData.DoctorCount));
-            healthReportStats.text(numberWithCommas(statsData.HealthReportCount));
+            bandStats.text(numberWithCommas(statsData.patientCount));
+            doctorStats.text(numberWithCommas(statsData.doctorCount));
+            healthReportStats.text(numberWithCommas(statsData.healthReportCount));
             messageRate.text(numberWithCommas(rollingAverage.currentAverage));
             //messageRate.text(numberWithCommas(diff));
         });
@@ -80,14 +88,14 @@ function MetricsApp() {
 
             $.each(doctorListData, function (id, jObject) {
 
-                var healthClass = getHealthBoxClass(jObject.HealthStatus);
-                var healthValue = getHealthBoxTextValue(jObject.HealthStatus);
+                var healthClass = getHealthBoxClass(jObject.value.averageHealthIndex);
+                var healthValue = getHealthBoxTextValue(jObject.value.averageHealthIndex);
 
                 $('<li class="name-and-healthbox clearfix"/>')
                     .append(
-                    $('<div/>').addClass(healthClass).css('background-color', computeColor(jObject.HealthStatus)).html(healthValue))
+                    $('<div/>').addClass(healthClass).css('background-color', computeColor(jObject.value.averageHealthIndex)).html(healthValue))
                     .append(
-                    $('<span/>').text(jObject.DoctorName))
+                    $('<span/>').text(jObject.value.doctorName))
                     .appendTo(doctorList);
             });
 
@@ -97,20 +105,20 @@ function MetricsApp() {
 
     this.UpdateUserInfo = function () {
         api.GetPatient(self.currentBandId, function (patientData) {
-            self.currentPersonName = patientData.PersonName;
+            self.SetUserName(patientData.personName);
 
-            var healthBoxClass = getHealthBoxClass(patientData.HealthIndexValue);
-            var healthBoxText = getHealthBoxTextValue(patientData.HealthIndexValue);
+            var healthBoxClass = getHealthBoxClass(patientData.healthIndexValue);
+            var healthBoxText = getHealthBoxTextValue(patientData.healthIndexValue);
 
             var userHealthIndex = $('#userInfo-userHealthIndex');
             userHealthIndex.empty();
-            userHealthIndex.append($('<div/>').addClass(healthBoxClass).css('background-color', computeColor(patientData.HealthIndexValue)).html(healthBoxText));
+            userHealthIndex.append($('<div/>').addClass(healthBoxClass).css('background-color', computeColor(patientData.healthIndexValue)).html(healthBoxText));
             userHealthIndex.append($('<span/>').text('Your Stress Index'));
 
             var heartRateTable = $('#userStats #heartRateTable');
             heartRateTable.empty();
 
-            api.GetCountyHealth(patientData.CountyInfo.CountyId, function (value) {
+            api.GetCountyHealth(patientData.countyInfo.countyId, function (value) {
 
                 var healthBoxClass = getHealthBoxClass(value);
                 var healthBoxText = getHealthBoxTextValue(value);
@@ -118,17 +126,17 @@ function MetricsApp() {
                 var countyHealthIndex = $('#userInfo-countyHealthIndex');
                 countyHealthIndex.empty();
                 countyHealthIndex.append($('<div/>').addClass(healthBoxClass).css('background-color', computeColor(value)).html(healthBoxText));
-                countyHealthIndex.append($('<span/>').text(patientData.CountyInfo.CountyName + ' average'));
+                countyHealthIndex.append($('<span/>').text(patientData.countyInfo.countyName + ' average'));
             });
 
             var bptickpoints = [];
 
             var bpTickCount = 1;
 
-            $.each(patientData.HeartRateHistory, function (id, jObject) {
+            $.each(patientData.heartRateHistory, function (id, jObject) {
                 var tick = [];
-                tick.push(self.FormatDateTime(jObject.Timestamp));
-                tick.push(jObject.HeartRate);
+                tick.push(self.FormatDateTime(jObject.timestamp));
+                tick.push(jObject.heartRate);
                 bpTickCount++;
                 bptickpoints.push(tick);
             });
@@ -137,16 +145,11 @@ function MetricsApp() {
 
             $('#userStats .loadingMessage').hide();
 
-            if (self.currentContext == 'user') {
-                self.SetUserName(self.currentPersonName);
-            }
-
-            self.UpdateDoctorList(patientData.CountyInfo.CountyId);
+            self.UpdateDoctorList(patientData.countyInfo.countyId);
         });
     }
 
     this.SetUserContext = function () {
-        this.SetUserName(this.currentPersonName);
         this.currentContext = 'user';
         $('.header-title h1').text('Health Metrics');
         $('.header-title h1').css('color', '#FF8A00');
@@ -308,8 +311,8 @@ function DrawLineGraph(elementById, title, xAxisName, yAxisName, dataArray, yHei
 function getCountyHealthViewModel(countyHealthData) {
     var ret = new countyHealthViewModel();
 
-    ret.Id = countyHealthData.Id;
-    ret.healthIndex = countyHealthData.Health;
+    ret.Id = countyHealthData.id;
+    ret.healthIndex = countyHealthData.health;
 
     return ret;
 }

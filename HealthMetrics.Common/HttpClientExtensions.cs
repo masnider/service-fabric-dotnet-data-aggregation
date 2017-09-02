@@ -46,6 +46,31 @@ namespace System.Net.Http
             return MakeHttpRequest(instance, createRequest, cancellationToken, servicePartitionClient);
         }
 
+        //long partitionKey
+
+        public static Task<HttpResponseMessage> GetServiceAsync(
+            this HttpClient instance, Uri serviceInstanceUri, string requestPath,
+            CancellationToken cancellationToken = default(CancellationToken))
+        {
+            ServicePartitionClient<HttpCommunicationClient> servicePartitionClient = new ServicePartitionClient<HttpCommunicationClient>(
+                clientFactory,
+                serviceInstanceUri);
+
+            return MakeGetRequest(instance, requestPath, cancellationToken, servicePartitionClient);
+        }
+
+        public static Task<HttpResponseMessage> GetServiceAsync(
+    this HttpClient instance, Uri serviceInstanceUri, long partitionKey, string requestPath,
+    CancellationToken cancellationToken = default(CancellationToken))
+        {
+            ServicePartitionClient<HttpCommunicationClient> servicePartitionClient = new ServicePartitionClient<HttpCommunicationClient>(
+                clientFactory,
+                serviceInstanceUri,
+                new ServicePartitionKey(partitionKey));
+
+            return MakeGetRequest(instance, requestPath, cancellationToken, servicePartitionClient);
+        }
+
         private static Task<HttpResponseMessage> MakeHttpRequest(
             HttpClient instance, Func<HttpRequestMessage> createRequest, CancellationToken cancellationToken,
             ServicePartitionClient<HttpCommunicationClient> servicePartitionClient)
@@ -61,6 +86,24 @@ namespace System.Net.Http
                     request.RequestUri = newUri;
 
                     HttpResponseMessage response = await instance.SendAsync(request, cancellationToken);
+
+                    response.EnsureSuccessStatusCode();
+
+                    return response;
+                });
+        }
+
+        private static Task<HttpResponseMessage> MakeGetRequest(
+    HttpClient instance, string requestPath, CancellationToken cancellationToken,
+    ServicePartitionClient<HttpCommunicationClient> servicePartitionClient)
+        {
+            return servicePartitionClient.InvokeWithRetryAsync(
+                async
+                    client =>
+                {
+                    Uri newUri = new Uri(client.BaseAddress, requestPath.TrimStart('/'));
+
+                    HttpResponseMessage response = await instance.GetAsync(newUri, cancellationToken);
 
                     response.EnsureSuccessStatusCode();
 

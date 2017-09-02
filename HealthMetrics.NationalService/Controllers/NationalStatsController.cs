@@ -20,6 +20,7 @@ namespace HealthMetrics.NationalService
     /// </summary>
     public class NationalStatsController : ApiController
     {
+        
         private const string HealthStatusDictionary = "healthStatusDictionary";
         private const string TimeStatsDictionary = "TimeTracker";
         private readonly ConcurrentDictionary<string, long> statsDictionary;
@@ -57,12 +58,14 @@ namespace HealthMetrics.NationalService
                         offset = creationTimeResult.Value;
                     }
 
-                    return new NationalStatsViewModel(
+                    var model = new NationalStatsViewModel(
                         this.statsDictionary["totalDoctors"],
                         this.statsDictionary["totalPatientCount"],
                         this.statsDictionary["totalHealthReportCount"],
                         0,
                         offset);
+
+                    return model;
                 }
             }
             catch (Exception e)

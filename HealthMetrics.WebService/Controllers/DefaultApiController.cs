@@ -13,51 +13,72 @@ namespace HealthMetrics.WebService.Controllers
     using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
-    using System.Web.Http;
     using HealthMetrics.BandActor.Interfaces;
     using HealthMetrics.Common;
     using Microsoft.ServiceFabric.Actors;
     using Microsoft.ServiceFabric.Actors.Client;
     using Microsoft.ServiceFabric.Actors.Query;
+    using Microsoft.AspNetCore.Mvc;
+    using System.Collections.Generic;
+    using Newtonsoft.Json;
+    using HealthMetrics.NationalService.Models;
+    using HealthMetrics.CountyService;
 
-    [RoutePrefix("api")]
-    public class DefaultApiController : ApiController
+    public class DefaultApiController : Controller
     {
         private readonly KeyedCollection<string, ConfigurationProperty> configPackageSettings;
 
-        public DefaultApiController(ConfigurationSettings configPackageSettings)
+        public DefaultApiController()
         {
-            this.configPackageSettings = configPackageSettings.Sections["HealthMetrics.WebService.Settings"].Parameters;
+            this.configPackageSettings = FabricRuntime.GetActivationContext().GetConfigurationPackage("Config").Settings.Sections["HealthMetrics.WebService.Settings"].Parameters;
         }
 
         [HttpGet]
-        [Route("settings/{setting}")]
+        [Route("api/settings/{setting}")]
         public Task<string> GetSettingValue(string setting)
         {
             return Task.FromResult<string>(this.GetSetting(setting));
         }
 
         [HttpGet]
-        [Route("national/health")]
-        public Task<HttpResponseMessage> GetNationalHealth()
+        [Route("api/national/health")]
+        public async Task<List<CountyHealth>> GetNationalHealth()
         {
-            ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("NationalServiceInstanceName"));
-            HttpClient client = new HttpClient();
+            try
+            {
+                ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("NationalServiceInstanceName"));
+                HttpClient client = new HttpClient();
 
-            return client.SendToServiceAsync(
-                serviceUri.ToUri(),
-                () => new HttpRequestMessage(HttpMethod.Get, "/national/health"));
+                ServicePrimer primer = new ServicePrimer();
+                await primer.WaitForStatefulService(serviceUri.ToUri(), CancellationToken.None);
+
+                HttpResponseMessage response = await client.GetServiceAsync(serviceUri.ToUri(), "/national/health");
+                
+                var result = JsonConvert.DeserializeObject<List<CountyHealth>>(await response.Content.ReadAsStringAsync());
+                
+                return result;
+            }
+            catch (Exception e)
+            {
+                ServiceEventSource.Current.Message("Exception in Web API Controller getting national stats {0}", e);
+                throw;
+            }
         }
 
-        [Route("national/stats")]
-        public Task<HttpResponseMessage> GetNationalStats()
+        [Route("api/national/stats")]
+        public async Task<NationalStatsViewModel> GetNationalStats()
         {
             ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("NationalServiceInstanceName"));
             HttpClient client = new HttpClient();
 
-            return client.SendToServiceAsync(
-                serviceUri.ToUri(),
-                () => new HttpRequestMessage(HttpMethod.Get, "/national/stats"));
+            ServicePrimer primer = new ServicePrimer();
+            await primer.WaitForStatefulService(serviceUri.ToUri(), CancellationToken.None);
+
+            HttpResponseMessage response = await client.GetServiceAsync(serviceUri.ToUri(), "/national/stats");
+
+            var result = JsonConvert.DeserializeObject<NationalStatsViewModel>(await response.Content.ReadAsStringAsync());
+
+            return result;
         }
 
         /// <summary>
@@ -66,29 +87,37 @@ namespace HealthMetrics.WebService.Controllers
         /// <param name="countyId"></param>
         /// <returns></returns>
         [HttpGet]
-        [Route("county/{countyId}/doctors/")]
-        public Task<HttpResponseMessage> GetDoctors(int countyId)
+        [Route("api/county/{countyId}/doctors/")]
+        public async Task<IEnumerable<KeyValuePair<Guid, CountyDoctorStats>>> GetDoctors(int countyId)
         {
             ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("CountyServiceInstanceName"));
             HttpClient client = new HttpClient();
 
-            return client.SendToServiceAsync(
-                serviceUri.ToUri(),
-                countyId,
-                () => new HttpRequestMessage(HttpMethod.Get, "/county/doctors/" + countyId));
+            ServicePrimer primer = new ServicePrimer();
+            await primer.WaitForStatefulService(serviceUri.ToUri(), CancellationToken.None);
+
+            HttpResponseMessage response = await client.GetServiceAsync(serviceUri.ToUri(), countyId, "/county/doctors/" + countyId);
+
+            var result = JsonConvert.DeserializeObject<IEnumerable<KeyValuePair<Guid, CountyDoctorStats>>>(await response.Content.ReadAsStringAsync());
+
+            return result;
         }
 
         [HttpGet]
-        [Route("county/{countyId}/health/")]
-        public Task<HttpResponseMessage> GetCountyHealth(int countyId)
+        [Route("api/county/{countyId}/health/")]
+        public async Task<HealthIndex> GetCountyHealth(int countyId)
         {
             ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("CountyServiceInstanceName"));
             HttpClient client = new HttpClient();
 
-            return client.SendToServiceAsync(
-                serviceUri.ToUri(),
-                countyId,
-                () => new HttpRequestMessage(HttpMethod.Get, "/county/health/" + countyId));
+            ServicePrimer primer = new ServicePrimer();
+            await primer.WaitForStatefulService(serviceUri.ToUri(), CancellationToken.None);
+
+            HttpResponseMessage response = await client.GetServiceAsync(serviceUri.ToUri(), countyId, "/county/health/" + countyId);
+
+            var result = JsonConvert.DeserializeObject<HealthIndex>(await response.Content.ReadAsStringAsync());
+
+            return result;
         }
 
         /// <summary>
@@ -103,33 +132,38 @@ namespace HealthMetrics.WebService.Controllers
         /// <param name="bandId"></param>
         /// <returns></returns>
         [HttpGet]
-        [Route("patients/{bandId}")]
-        public async Task<IHttpActionResult> GetPatientData(Guid bandId)
+        [Route("api/patients/{bandId}")]
+        public async Task<IActionResult> GetPatientData(Guid bandId)
         {
             try
             {
                 ActorId bandActorId = new ActorId(bandId);
                 ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("BandActorServiceInstanceName"));
+
+                ServicePrimer primer = new ServicePrimer();
+                await primer.WaitForStatefulService(serviceUri.ToUri(), CancellationToken.None);
+
                 IBandActor actor = ActorProxy.Create<IBandActor>(bandActorId, serviceUri.ToUri());
 
-                return this.Ok(await actor.GetBandDataAsync());
+                return Ok(await actor.GetBandDataAsync());
             }
             catch (AggregateException ae)
             {
-                return this.InternalServerError(ae.InnerException);
+                ServiceEventSource.Current.Message("Exception in Web ApiController {0}", ae.InnerException);
+                throw ae.InnerException;
             }
         }
 
         [HttpGet]
-        [Route("settings/GetIds")]
-        public async Task<string> GetPatientId()
+        [Route("api/GetIds")]
+        public async Task<KeyValuePair<string, string>> GetPatientId()
         {
             if (bool.Parse(this.configPackageSettings["GenerateKnownPeople"].Value))
             {
                 string patientId = this.configPackageSettings["KnownPatientId"].Value;
                 string doctorId = this.configPackageSettings["KnownDoctorId"].Value;
 
-                return string.Format("{0}|{1}", patientId, doctorId);
+                return new KeyValuePair<string, string>(patientId, doctorId);
             }
             else
             {
@@ -142,7 +176,7 @@ namespace HealthMetrics.WebService.Controllers
             return this.configPackageSettings[key].Value;
         }
 
-        private async Task<string> GetRandomIdsAsync()
+        private async Task<KeyValuePair<string, string>> GetRandomIdsAsync()
         {
             ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("BandActorServiceInstanceName"));
             Uri fabricServiceName = serviceUri.ToUri();
@@ -166,7 +200,7 @@ namespace HealthMetrics.WebService.Controllers
                 {
                     foreach (Partition p in partitions)
                     {
-                        long partitionKey = ((Int64RangePartitionInformation) p.PartitionInformation).LowKey;
+                        long partitionKey = ((Int64RangePartitionInformation)p.PartitionInformation).LowKey;
                         token.ThrowIfCancellationRequested();
                         ContinuationToken queryContinuationToken = null;
                         IActorService proxy = ActorServiceProxy.Create(fabricServiceName, partitionKey);
@@ -176,7 +210,7 @@ namespace HealthMetrics.WebService.Controllers
                             bandActorId = info.ActorId;
                             IBandActor bandActor = ActorProxy.Create<IBandActor>(bandActorId, fabricServiceName);
                             BandDataViewModel data = await bandActor.GetBandDataAsync();
-                            return string.Format("{0}|{1}", bandActorId, data.DoctorId);
+                            return new KeyValuePair<string, string>(bandActorId.ToString(), data.DoctorId.ToString());
                         }
                         //otherwise we will bounce around other partitions until we find an actor
                     }
@@ -184,6 +218,7 @@ namespace HealthMetrics.WebService.Controllers
                 catch (Exception e)
                 {
                     ServiceEventSource.Current.Message("Exception when obtaining actor ID: " + e.ToString());
+                    continue;
                 }
             }
 
