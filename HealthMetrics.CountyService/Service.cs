@@ -208,13 +208,11 @@ namespace HealthMetrics.CountyService
             return new[]
             {
                 new ServiceReplicaListener(
-                    initParams =>
+                    (initParams) =>
                         new HttpCommunicationListener(
                             "healthcounty",
-                            new Startup(
-                                this.StateManager,
-                                new HealthIndexCalculator(this.Context)),
-                            this.Context))
+                            new Startup(this.StateManager, new HealthIndexCalculator(this.Context)),
+                            this.Context), "ServiceEndpoint")
             };
         }
 

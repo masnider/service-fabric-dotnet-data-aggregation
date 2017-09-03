@@ -129,16 +129,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CalculationMode.cs" />
+    <Compile Include="ConcurrentDictionaryExtensions.cs" />
     <Compile Include="CryptoRandom.cs" />
     <Compile Include="HashUtil.cs" />
     <Compile Include="HealthIndex.cs" />
     <Compile Include="HealthIndexCalculator.cs" />
+    <Compile Include="HttpVerb.cs" />
     <Compile Include="NationalStatsViewModel.cs" />
     <Compile Include="CountyStatsViewModel.cs" />
     <Compile Include="HttpCommunicationClient.cs" />
     <Compile Include="HttpCommunicationClientFactory.cs" />
     <Compile Include="CountyRecord.cs" />
-    <Compile Include="HttpClientExtensions.cs" />
+    <Compile Include="FabricHttpClient.cs" />
     <Compile Include="IOwinAppBuilder.cs" />
     <Compile Include="HttpCommunicationListener.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

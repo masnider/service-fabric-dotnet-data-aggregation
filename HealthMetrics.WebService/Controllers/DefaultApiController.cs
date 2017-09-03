@@ -23,6 +23,8 @@ namespace HealthMetrics.WebService.Controllers
     using Newtonsoft.Json;
     using HealthMetrics.NationalService.Models;
     using HealthMetrics.CountyService;
+    using System.Net;
+    using Microsoft.ServiceFabric.Services.Client;
 
     public class DefaultApiController : Controller
     {
@@ -30,7 +32,7 @@ namespace HealthMetrics.WebService.Controllers
 
         public DefaultApiController()
         {
-            this.configPackageSettings = FabricRuntime.GetActivationContext().GetConfigurationPackage("Config").Settings.Sections["HealthMetrics.WebService.Settings"].Parameters;
+            this.configPackageSettings = FabricRuntime.GetActivationContext().GetConfigurationPackageObject("Config").Settings.Sections["HealthMetrics.WebService.Settings"].Parameters;
         }
 
         [HttpGet]
@@ -47,20 +49,22 @@ namespace HealthMetrics.WebService.Controllers
             try
             {
                 ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("NationalServiceInstanceName"));
-                HttpClient client = new HttpClient();
 
                 ServicePrimer primer = new ServicePrimer();
                 await primer.WaitForStatefulService(serviceUri.ToUri(), CancellationToken.None);
 
-                HttpResponseMessage response = await client.GetServiceAsync(serviceUri.ToUri(), "/national/health");
-                
-                var result = JsonConvert.DeserializeObject<List<CountyHealth>>(await response.Content.ReadAsStringAsync());
+                var result = await FabricHttpClient.MakeGetRequest<List<CountyHealth>>(
+                    serviceUri.ToUri(),
+                    new ServicePartitionKey(),
+                    "ServiceEndpoint",
+                    "/national/health"
+                    );
                 
                 return result;
             }
             catch (Exception e)
             {
-                ServiceEventSource.Current.Message("Exception in Web API Controller getting national stats {0}", e);
+                ServiceEventSource.Current.Message("Exception in Web API Controller getting national health {0}", e);
                 throw;
             }
         }
@@ -68,17 +72,28 @@ namespace HealthMetrics.WebService.Controllers
         [Route("api/national/stats")]
         public async Task<NationalStatsViewModel> GetNationalStats()
         {
-            ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("NationalServiceInstanceName"));
-            HttpClient client = new HttpClient();
+            try
+            {
 
-            ServicePrimer primer = new ServicePrimer();
-            await primer.WaitForStatefulService(serviceUri.ToUri(), CancellationToken.None);
+                ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("NationalServiceInstanceName"));
 
-            HttpResponseMessage response = await client.GetServiceAsync(serviceUri.ToUri(), "/national/stats");
+                ServicePrimer primer = new ServicePrimer();
+                await primer.WaitForStatefulService(serviceUri.ToUri(), CancellationToken.None);
 
-            var result = JsonConvert.DeserializeObject<NationalStatsViewModel>(await response.Content.ReadAsStringAsync());
+                var result = await FabricHttpClient.MakeGetRequest<NationalStatsViewModel>(
+                    serviceUri.ToUri(),
+                    new ServicePartitionKey(),
+                    "ServiceEndpoint",
+                    "/national/stats"
+                    );
 
-            return result;
+                return result;
+            }
+            catch (Exception e)
+            {
+                ServiceEventSource.Current.Message("Exception in Web API Controller getting national stats {0}", e);
+                throw;
+            }
         }
 
         /// <summary>
@@ -90,34 +105,55 @@ namespace HealthMetrics.WebService.Controllers
         [Route("api/county/{countyId}/doctors/")]
         public async Task<IEnumerable<KeyValuePair<Guid, CountyDoctorStats>>> GetDoctors(int countyId)
         {
-            ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("CountyServiceInstanceName"));
-            HttpClient client = new HttpClient();
+            try
+            {
+                ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("CountyServiceInstanceName"));
 
-            ServicePrimer primer = new ServicePrimer();
-            await primer.WaitForStatefulService(serviceUri.ToUri(), CancellationToken.None);
+                ServicePrimer primer = new ServicePrimer();
+                await primer.WaitForStatefulService(serviceUri.ToUri(), CancellationToken.None);
 
-            HttpResponseMessage response = await client.GetServiceAsync(serviceUri.ToUri(), countyId, "/county/doctors/" + countyId);
+                var result = await FabricHttpClient.MakeGetRequest<IEnumerable<KeyValuePair<Guid, CountyDoctorStats>>>(
+                    serviceUri.ToUri(),
+                    new ServicePartitionKey(countyId),
+                    "ServiceEndpoint",
+                    "/county/doctors/" + countyId
+                    );
 
-            var result = JsonConvert.DeserializeObject<IEnumerable<KeyValuePair<Guid, CountyDoctorStats>>>(await response.Content.ReadAsStringAsync());
-
-            return result;
+                return result;
+            }
+            catch (Exception e)
+            {
+                ServiceEventSource.Current.Message("Exception in Web API Controller getting county {0} doctors: {1}", countyId,  e);
+                throw;
+            }
         }
 
         [HttpGet]
         [Route("api/county/{countyId}/health/")]
         public async Task<HealthIndex> GetCountyHealth(int countyId)
         {
-            ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("CountyServiceInstanceName"));
-            HttpClient client = new HttpClient();
 
-            ServicePrimer primer = new ServicePrimer();
-            await primer.WaitForStatefulService(serviceUri.ToUri(), CancellationToken.None);
+            try
+            {
+                ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("CountyServiceInstanceName"));
 
-            HttpResponseMessage response = await client.GetServiceAsync(serviceUri.ToUri(), countyId, "/county/health/" + countyId);
+                ServicePrimer primer = new ServicePrimer();
+                await primer.WaitForStatefulService(serviceUri.ToUri(), CancellationToken.None);
 
-            var result = JsonConvert.DeserializeObject<HealthIndex>(await response.Content.ReadAsStringAsync());
+                var result = await FabricHttpClient.MakeGetRequest<HealthIndex>(
+                    serviceUri.ToUri(),
+                    new ServicePartitionKey(countyId),
+                    "ServiceEndpoint",
+                    "/county/health/" + countyId
+                    );
 
-            return result;
+                return result;
+            }
+            catch (Exception e)
+            {
+                ServiceEventSource.Current.Message("Exception in Web API Controller getting county {0} health {1}", countyId, e);
+                throw;
+            }
         }
 
         /// <summary>

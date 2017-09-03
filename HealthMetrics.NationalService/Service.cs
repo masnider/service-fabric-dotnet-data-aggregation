@@ -48,7 +48,7 @@ namespace HealthMetrics.NationalService
                         new HttpCommunicationListener(
                             "healthnational",
                             new Startup(this.StateManager, this.updatedCounties, this.statsDictionary),
-                            this.Context))
+                            this.Context), "ServiceEndpoint")
             };
         }
 

@@ -77,55 +77,7 @@ namespace HealthMetrics.DoctorActor
 
             return;
         }
-
-        //public async Task<DoctorDataViewModel> GetPatientsAsync()
-        //{
-        //    try
-        //    {
-        //        ConditionalValue<long> healthReportCountResult = await this.StateManager.TryGetStateAsync<long>("HealthReportCount");
-
-        //        if (healthReportCountResult.HasValue)
-        //        {
-
-        //            var name = await this.StateManager.GetStateAsync<string>("Name");
-        //            var countyRecord = await this.StateManager.GetStateAsync<CountyRecord>("CountyRecord");
-        //            var healthReportCount = await this.StateManager.GetStateAsync<long>("HealthReportCount");
-        //            var patientHealthReports = await this.StateManager.GetStateAsync<Dictionary<Guid, DoctorPatientState>>("PersonHealthStatuses");
-
-        //            if (healthReportCountResult.Value == 0)
-        //            {
-        //                return new DoctorDataViewModel(name, this.indexCalculator.ComputeIndex(-1), countyRecord, Enumerable.Empty<PatientDataViewModel>());
-        //            }
-
-        //            HealthIndex patientAverage = await this.GetAveragePatientHealthInfoAsync();
-
-        //            ActorEventSource.Current.ActorMessage(
-        //                this,
-        //                "Doctor {0} sending doctor view for county {1} with average {2}",
-        //                this.Id.GetGuidId(),
-        //                countyRecord,
-        //                patientAverage);
-
-        //            return new DoctorDataViewModel(
-        //                name,
-        //                patientAverage,
-        //                countyRecord,
-        //                patientHealthReports.Select(
-        //                    x =>
-        //                        new PatientDataViewModel(
-        //                            x.Key,
-        //                            x.Value.Name,
-        //                            x.Value.HealthIndex)));
-        //        }
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        throw new ArgumentException(string.Format("Exception inside doctor actor {0}|{1}|{2}", this.Id, this.Id.Kind, e));
-        //    }
-
-        //    throw new ArgumentException(string.Format("No actor state in actor {0}", this.Id));
-        //}
-
+        
         public async Task<Tuple<CountyRecord, string>> GetInfoAndNameAsync()
         {
             ConditionalValue<long> healthReportCountResult = await this.StateManager.TryGetStateAsync<long>("HealthReportCount");

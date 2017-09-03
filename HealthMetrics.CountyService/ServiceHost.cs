@@ -22,7 +22,8 @@ namespace HealthMetrics.CountyService
                 ServicePointManager.DefaultConnectionLimit = 1024;
                 ServicePointManager.SetTcpKeepAlive(true, 2000, 1000);
                 ServicePointManager.UseNagleAlgorithm = false;
-
+                ServicePointManager.MaxServicePointIdleTime = 4 * 1000;
+                
                 ServiceRuntime.RegisterServiceAsync(Service.ServiceTypeName, context => new Service(context)).GetAwaiter().GetResult();
 
                 ServiceEventSource.Current.ServiceTypeRegistered(Process.GetCurrentProcess().Id, Service.ServiceTypeName);

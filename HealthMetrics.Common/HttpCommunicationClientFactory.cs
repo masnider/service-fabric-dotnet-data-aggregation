@@ -12,7 +12,7 @@ namespace HealthMetrics.Common
     using Microsoft.ServiceFabric.Services.Communication.Client;
 
     /// <summary>
-    /// Factory that creates clients that know to communicate with the WordCount service.
+    /// Factory that creates clients that know to communicate with the a service.
     /// Contains a service partition resolver that resolves a partition key
     /// and sets BaseAddress to the address of the replica that should serve a request.
     /// </summary>
