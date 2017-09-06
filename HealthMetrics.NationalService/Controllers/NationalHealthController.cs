@@ -38,7 +38,7 @@ namespace HealthMetrics.NationalService
         /// <returns></returns>
         [HttpPost]
         [Route("national/health/{countyId}")]
-        public async Task<IHttpActionResult> Post([FromUri] int countyId, [FromBody] CountyStatsViewModel status)
+        public async Task Post([FromUri] int countyId, CountyStatsViewModel status)
         {
             IReliableDictionary<int, NationalCountyStats> dictionary =
                 await this.stateManager.GetOrAddAsync<IReliableDictionary<int, NationalCountyStats>>(HealthStatusDictionary);
@@ -60,7 +60,7 @@ namespace HealthMetrics.NationalService
             }
 
             ServiceEventSource.Current.Message("National Service recieved and saved report {0}|{1}", countyId, status);
-            return this.Ok();
+            return;
         }
 
         /// <summary>

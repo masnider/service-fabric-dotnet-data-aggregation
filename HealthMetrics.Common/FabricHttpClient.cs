@@ -16,6 +16,7 @@ namespace System.Net.Http
     using Newtonsoft.Json;
     using System.Net.Http.Formatting;
     using System.Net.Http.Headers;
+    using System.Text;
 
     public static class FabricHttpClient
     {
@@ -37,7 +38,7 @@ namespace System.Net.Http
             }
 
             httpClient = new HttpClient(handler);
-            
+
             clientFactory = new HttpCommunicationClientFactory(
                 ServicePartitionResolver.GetDefault(),
                 "endpointName",
@@ -51,7 +52,8 @@ namespace System.Net.Http
             Uri serviceName,
             ServicePartitionKey key,
             string endpointName,
-            string requestPath
+            string requestPath,
+            CancellationToken ct
         )
         {
             return MakeHttpRequest<TReturn, string>(
@@ -60,20 +62,41 @@ namespace System.Net.Http
                     endpointName,
                     requestPath,
                     null,
-                    HttpVerb.GET
+                    HttpVerb.GET,
+                    ct
                     );
         }
-        
-        public static Task<TReturn> MakeHttpRequest<TReturn, TPayload>(
+
+        public static Task<TReturn> MakePostRequest<TReturn, TPayload>(
             Uri serviceName,
             ServicePartitionKey key,
             string endpointName,
             string requestPath,
             TPayload payload,
-            HttpVerb verb
+            CancellationToken ct
         )
         {
+            return MakeHttpRequest<TReturn, TPayload>(
+                    serviceName,
+                    key,
+                    endpointName,
+                    requestPath,
+                    payload,
+                    HttpVerb.POST,
+                    ct
+                    );
+        }
 
+        private static Task<TReturn> MakeHttpRequest<TReturn, TPayload>(
+            Uri serviceName,
+            ServicePartitionKey key,
+            string endpointName,
+            string requestPath,
+            TPayload payload,
+            HttpVerb verb,
+            CancellationToken ct
+        )
+        {
             var servicePartitionClient = new ServicePartitionClient<HttpCommunicationClient>(
                 clientFactory,
                 serviceName,
@@ -90,7 +113,7 @@ namespace System.Net.Http
                     {
                         //https://aspnetmonsters.com/2016/08/2016-08-27-httpclientwrong/
                         //but then http://byterot.blogspot.co.uk/2016/07/singleton-httpclient-dns.html
-                        //so we do this per https://github.com/NimaAra/Easy.Common/blob/master/Easy.Common/RestClient.cs
+                        //so we do this ala https://github.com/NimaAra/Easy.Common/blob/master/Easy.Common/RestClient.cs
                         ServicePointManager.FindServicePoint(client.BaseAddress).ConnectionLeaseTimeout = 60 * 1000;
                     }
 
@@ -101,26 +124,25 @@ namespace System.Net.Http
                     {
 
                         case HttpVerb.GET:
-                            response = await httpClient.GetAsync(newUri, HttpCompletionOption.ResponseHeadersRead);
+                            response = await httpClient.GetAsync(newUri, HttpCompletionOption.ResponseHeadersRead, ct);
                             break;
 
                         case HttpVerb.POST:
-                            var content = new PushStreamContent((stream, httpContent, httpContext) =>
+                            using (StringWriter writer = new StringWriter())
                             {
-                                using (var writer = new StreamWriter(stream))
+                                using (JsonTextWriter jsonWriter = new JsonTextWriter(writer))
                                 {
-                                    jSerializer.Serialize(writer, payload);
+                                    jSerializer.Serialize(jsonWriter, payload);
+                                    await jsonWriter.FlushAsync();
+                                    await writer.FlushAsync();
+                                    response = await httpClient.PostAsync(newUri, new StringContent(writer.ToString(), Encoding.UTF8, "application/json"), ct);
                                 }
-                            });
-
-                            response = await httpClient.PostAsync(newUri, content);
+                            }
                             break;
 
                         default:
                             throw new ArgumentException("Unsupported HTTP Verb submitted for HTTP message in HTTPClientExtension");
                     }
-
-                    response.EnsureSuccessStatusCode();
 
                     using (var stream = await response.Content.ReadAsStreamAsync())
                     {
@@ -128,12 +150,11 @@ namespace System.Net.Http
                         {
                             using (JsonReader jsonReader = new JsonTextReader(streamReader))
                             {
-                                JsonSerializer serializer = new JsonSerializer();
-                                return serializer.Deserialize<TReturn>(jsonReader);
+                                return jSerializer.Deserialize<TReturn>(jsonReader);
                             }
                         }
                     }
-                });
+                }, ct);
         }
     }
 }

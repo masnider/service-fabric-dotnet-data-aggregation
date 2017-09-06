@@ -11,8 +11,12 @@ namespace HealthMetrics.Common
     [DataContract]
     public struct HealthIndex : IComparable, IComparable<HealthIndex>, IEquatable<HealthIndex>
     {
-        [DataMember] private int value;
-        [DataMember] private bool mode;
+        [DataMember]
+        private int value;
+
+
+        [DataMember]
+        private bool mode;
 
         public HealthIndex(int value, bool mode)
         {
@@ -24,11 +28,6 @@ namespace HealthMetrics.Common
         {
             return this.value.CompareTo(other.value);
         }
-
-        //public static explicit operator HealthIndex(int value, bool mode)
-        //{
-        //    return new HealthIndex(value, mode);
-        //}
 
         public static bool operator ==(HealthIndex item1, HealthIndex item2)
         {
@@ -90,7 +89,7 @@ namespace HealthMetrics.Common
             return this.value.GetHashCode();
         }
 
-        internal int GetValue()
+        public int GetValue()
         {
             return this.value;
         }

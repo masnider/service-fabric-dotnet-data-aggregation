@@ -22,6 +22,8 @@ namespace HealthMetrics.DoctorActor
     using Microsoft.ServiceFabric.Services.Client;
     using Microsoft.ServiceFabric.Services.Communication.Client;
     using Newtonsoft.Json;
+    using System.Net.Http;
+    using System.Threading;
 
     [StatePersistence(StatePersistence.Volatile)]
     internal class DoctorActor : Actor, IDoctorActor, IRemindable
@@ -77,7 +79,7 @@ namespace HealthMetrics.DoctorActor
 
             return;
         }
-        
+
         public async Task<Tuple<CountyRecord, string>> GetInfoAndNameAsync()
         {
             ConditionalValue<long> healthReportCountResult = await this.StateManager.TryGetStateAsync<long>("HealthReportCount");
@@ -130,52 +132,22 @@ namespace HealthMetrics.DoctorActor
                             await this.GetAveragePatientHealthInfoAsync(),
                             name);
 
-                        ServicePartitionKey partitionKey = new ServicePartitionKey(countyRecord.CountyId);
+
+                        ServiceUriBuilder serviceUri = new ServiceUriBuilder("HealthMetrics.CountyService");
+                        //ServicePartitionKey partitionKey = 
                         Guid id = this.Id.GetGuidId();
 
-                        ServicePartitionClient<HttpCommunicationClient> servicePartitionClient =
-                            new ServicePartitionClient<HttpCommunicationClient>(
-                                this.clientFactory,
-                                this.countyServiceInstanceUri,
-                                partitionKey);
+                        ServicePrimer primer = new ServicePrimer();
+                        await primer.WaitForStatefulService(serviceUri.ToUri(), CancellationToken.None);
 
-                        await servicePartitionClient.InvokeWithRetryAsync(
-                            client =>
-                            {
-                                Uri serviceAddress = new Uri(
-                                    client.BaseAddress,
-                                    string.Format(
-                                        "county/health/{0}/{1}",
-                                        partitionKey.Value.ToString(),
-                                        id));
-
-                                HttpWebRequest request = WebRequest.CreateHttp(serviceAddress);
-                                request.Method = "POST";
-                                request.ContentType = "application/json";
-                                request.KeepAlive = false;
-                                request.Timeout = (int) client.OperationTimeout.TotalMilliseconds;
-                                request.ReadWriteTimeout = (int) client.ReadWriteTimeout.TotalMilliseconds;
-
-                                using (Stream requestStream = request.GetRequestStream())
-                                {
-                                    using (BufferedStream buffer = new BufferedStream(requestStream))
-                                    {
-                                        using (StreamWriter writer = new StreamWriter(buffer))
-                                        {
-                                            JsonSerializer serializer = new JsonSerializer();
-                                            serializer.Serialize(writer, payload);
-                                            buffer.Flush();
-                                        }
-
-                                        using (HttpWebResponse response = (HttpWebResponse) request.GetResponse())
-                                        {
-                                            ActorEventSource.Current.Message("Doctor Sent Data to County: {0}", serviceAddress);
-                                            return Task.FromResult(true);
-                                        }
-                                    }
-                                }
-                            }
-                        );
+                        await FabricHttpClient.MakePostRequest<string, DoctorStatsViewModel>(
+                            serviceUri.ToUri(),
+                            new ServicePartitionKey(countyRecord.CountyId),
+                            "ServiceEndpoint",
+                            String.Format("/county/health/{0}/{1}", countyRecord.CountyId, id),
+                            payload,
+                            CancellationToken.None
+                            );
                     }
                 }
             }

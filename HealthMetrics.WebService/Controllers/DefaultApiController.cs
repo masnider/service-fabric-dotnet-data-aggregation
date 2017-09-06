@@ -57,7 +57,8 @@ namespace HealthMetrics.WebService.Controllers
                     serviceUri.ToUri(),
                     new ServicePartitionKey(),
                     "ServiceEndpoint",
-                    "/national/health"
+                    "/national/health",
+                    CancellationToken.None
                     );
                 
                 return result;
@@ -84,7 +85,8 @@ namespace HealthMetrics.WebService.Controllers
                     serviceUri.ToUri(),
                     new ServicePartitionKey(),
                     "ServiceEndpoint",
-                    "/national/stats"
+                    "/national/stats",
+                    CancellationToken.None
                     );
 
                 return result;
@@ -116,7 +118,8 @@ namespace HealthMetrics.WebService.Controllers
                     serviceUri.ToUri(),
                     new ServicePartitionKey(countyId),
                     "ServiceEndpoint",
-                    "/county/doctors/" + countyId
+                    "/county/doctors/" + countyId,
+                    CancellationToken.None
                     );
 
                 return result;
@@ -144,7 +147,8 @@ namespace HealthMetrics.WebService.Controllers
                     serviceUri.ToUri(),
                     new ServicePartitionKey(countyId),
                     "ServiceEndpoint",
-                    "/county/health/" + countyId
+                    "/county/health/" + countyId,
+                    CancellationToken.None
                     );
 
                 return result;
@@ -220,7 +224,6 @@ namespace HealthMetrics.WebService.Controllers
             ServicePrimer primer = new ServicePrimer();
 
             CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
-
             CancellationToken token = cts.Token;
 
             await primer.WaitForStatefulService(fabricServiceName, token);
@@ -228,9 +231,9 @@ namespace HealthMetrics.WebService.Controllers
             FabricClient fc = new FabricClient();
             ServicePartitionList partitions = await fc.QueryManager.GetPartitionListAsync(fabricServiceName);
 
-            ActorId bandActorId = null;
+            string doctorId = null;
 
-            while (!token.IsCancellationRequested && bandActorId == null)
+            while (!token.IsCancellationRequested && doctorId == null)
             {
                 try
                 {
@@ -243,10 +246,23 @@ namespace HealthMetrics.WebService.Controllers
                         PagedResult<ActorInformation> result = await proxy.GetActorsAsync(queryContinuationToken, token);
                         foreach (ActorInformation info in result.Items)
                         {
-                            bandActorId = info.ActorId;
+                            token.ThrowIfCancellationRequested();
+
+                            ActorId bandActorId = info.ActorId;
                             IBandActor bandActor = ActorProxy.Create<IBandActor>(bandActorId, fabricServiceName);
-                            BandDataViewModel data = await bandActor.GetBandDataAsync();
-                            return new KeyValuePair<string, string>(bandActorId.ToString(), data.DoctorId.ToString());
+                            
+                            try
+                            {
+                                BandDataViewModel data = await bandActor.GetBandDataAsync();
+                                doctorId = data.DoctorId.ToString();
+                                return new KeyValuePair<string, string>(bandActorId.ToString(), data.DoctorId.ToString());
+                            }
+                            catch (Exception e)
+                            {
+                                ServiceEventSource.Current.Message("Exception when obtaining actor ID. No State? " + e.ToString());
+                                continue;
+                            }
+
                         }
                         //otherwise we will bounce around other partitions until we find an actor
                     }
