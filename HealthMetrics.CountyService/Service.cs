@@ -24,65 +24,47 @@ namespace HealthMetrics.CountyService
     using Microsoft.ServiceFabric.Services.Runtime;
     using Newtonsoft.Json;
     using Web.Service;
+    using System.Net.Http;
 
     public class Service : StatefulService
     {
         internal const string ServiceTypeName = "HealthMetrics.CountyServiceType";
-
+        internal const string ConfigSectionName = "HealthMetrics.CountyService.Settings";
         internal const string CountyNameDictionaryName = "CountyNames";
-
         internal const string CountyHealthDictionaryName = "{0}-Health";
+        object ConfigPackageLockObject = new object();
 
-        private readonly TimeSpan interval = TimeSpan.FromSeconds(5);
+        private KeyedCollection<string, ConfigurationProperty> configPackageSettings;
 
-        private readonly HttpCommunicationClientFactory clientFactory = new HttpCommunicationClientFactory(
-            ServicePartitionResolver.GetDefault(),
-            "EndpointName",
-            TimeSpan.FromSeconds(10),
-            TimeSpan.FromSeconds(3));
-
-        private Uri nationalServiceInstanceUri;
-
-        private HealthIndexCalculator indexCalculator;
+        private readonly HealthIndexCalculator indexCalculator;
 
         public Service(StatefulServiceContext serviceContext) : base(serviceContext)
         {
+            InitConfig();
+            this.indexCalculator = new HealthIndexCalculator(serviceContext);
         }
 
         public Service(StatefulServiceContext serviceContext, IReliableStateManagerReplica reliableStateManagerReplica)
             : base(serviceContext, reliableStateManagerReplica)
         {
+            InitConfig();
+            this.indexCalculator = new HealthIndexCalculator(serviceContext);
         }
 
         protected override async Task RunAsync(CancellationToken cancellationToken)
         {
-            ConfigurationPackage configPackage = this.Context.CodePackageActivationContext.GetConfigurationPackageObject("Config");
-
-            this.UpdateConfigSettings(configPackage.Settings);
-
-            this.Context.CodePackageActivationContext.ConfigurationPackageModifiedEvent
-                += this.CodePackageActivationContext_ConfigurationPackageModifiedEvent;
-
-            this.indexCalculator = new HealthIndexCalculator(this.Context);
-
-            ServicePrimer primer = new ServicePrimer();
-            await primer.WaitForStatefulService(this.nationalServiceInstanceUri, cancellationToken);
-
             ServiceEventSource.Current.ServiceMessage(this, "CountyService starting data processing.");
+
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    IReliableDictionary<int, string> countyNamesDictionary =
-                        await this.StateManager.GetOrAddAsync<IReliableDictionary<int, string>>(CountyNameDictionaryName);
 
                     //every interval seconds, grab the counties and send them to national
-                    await Task.Delay(this.interval, cancellationToken);
+                    await Task.Delay(TimeSpan.FromSeconds(int.Parse(this.GetSetting("UpdateFrequency"))), cancellationToken);
 
-                    ServicePartitionClient<HttpCommunicationClient> servicePartitionClient =
-                        new ServicePartitionClient<HttpCommunicationClient>(
-                            this.clientFactory,
-                            this.nationalServiceInstanceUri);
+                    IReliableDictionary<int, string> countyNamesDictionary =
+                        await this.StateManager.GetOrAddAsync<IReliableDictionary<int, string>>(CountyNameDictionaryName);
 
                     IList<KeyValuePair<int, string>> countyNames = new List<KeyValuePair<int, string>>();
 
@@ -94,6 +76,8 @@ namespace HealthMetrics.CountyService
                         {
                             countyNames.Add(enumerator.Current);
                         }
+
+                        await tx.CommitAsync();
                     }
 
                     foreach (KeyValuePair<int, string> county in countyNames)
@@ -106,64 +90,59 @@ namespace HealthMetrics.CountyService
                         int totalDoctorCount = 0;
                         int totalPatientCount = 0;
                         long totalHealthReportCount = 0;
-                        HealthIndex avgHealth;
+                        //double priorAvg = 0;
+                        //double expandedAverage = 0;
+                        //double newTotal = 0;
+
+                        IList<KeyValuePair<Guid, CountyDoctorStats>> records = new List<KeyValuePair<Guid, CountyDoctorStats>>();
 
                         using (ITransaction tx = this.StateManager.CreateTransaction())
                         {
-                            IAsyncEnumerable<KeyValuePair<Guid, CountyDoctorStats>> healthRecords = await countyHealth.CreateEnumerableAsync(tx);
+                            IAsyncEnumerable<KeyValuePair<Guid, CountyDoctorStats>> healthRecords = await countyHealth.CreateEnumerableAsync(tx, EnumerationMode.Unordered);
 
                             IAsyncEnumerator<KeyValuePair<Guid, CountyDoctorStats>> enumerator = healthRecords.GetAsyncEnumerator();
-
-                            IList<KeyValuePair<Guid, CountyDoctorStats>> records = new List<KeyValuePair<Guid, CountyDoctorStats>>();
 
                             while (await enumerator.MoveNextAsync(cancellationToken))
                             {
                                 records.Add(enumerator.Current);
                             }
 
-                            avgHealth = this.indexCalculator.ComputeAverageIndex(records.Select(x => x.Value.AverageHealthIndex));
-
-                            foreach (KeyValuePair<Guid, CountyDoctorStats> item in records)
-                            {
-                                totalDoctorCount++;
-                                totalPatientCount += item.Value.PatientCount;
-                                totalHealthReportCount += item.Value.HealthReportCount;
-                            }
+                            await tx.CommitAsync();
                         }
+                            
+                        foreach (KeyValuePair<Guid, CountyDoctorStats> item in records)
+                        {
+                            
+                            //expandedAverage = priorAvg * totalDoctorCount;
+                            //newTotal = expandedAverage + item.Value.AverageHealthIndex.GetValue();
+
+                            totalDoctorCount++;
+                            totalPatientCount += item.Value.PatientCount;
+                            totalHealthReportCount += item.Value.HealthReportCount;
+
+
+                            //priorAvg = newTotal / totalHealthReportCount;
+
+                        }
+
+                        HealthIndex avgHealth = this.indexCalculator.ComputeAverageIndex(records.Select(x => x.Value.AverageHealthIndex));
 
                         CountyStatsViewModel payload = new CountyStatsViewModel(totalDoctorCount, totalPatientCount, totalHealthReportCount, avgHealth);
 
-                        await servicePartitionClient.InvokeWithRetryAsync(
-                            client =>
-                            {
-                                Uri serviceAddress = new Uri(client.BaseAddress, string.Format("national/health/{0}", county.Key));
+                        ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("NationalServiceName"));
 
-                                HttpWebRequest request = WebRequest.CreateHttp(serviceAddress);
-                                request.Method = "POST";
-                                request.ContentType = "application/json";
-                                request.Timeout = (int) client.OperationTimeout.TotalMilliseconds;
-                                request.ReadWriteTimeout = (int) client.ReadWriteTimeout.TotalMilliseconds;
+                        ServicePrimer primer = new ServicePrimer();
+                        await primer.WaitForStatefulService(serviceUri.ToUri(), CancellationToken.None);
 
-                                using (Stream requestStream = request.GetRequestStream())
-                                {
-                                    using (BufferedStream buffer = new BufferedStream(requestStream))
-                                    {
-                                        using (StreamWriter writer = new StreamWriter(buffer))
-                                        {
-                                            JsonSerializer serializer = new JsonSerializer();
-                                            serializer.Serialize(writer, payload);
-                                            buffer.Flush();
-                                        }
+                        await FabricHttpClient.MakePostRequest<string, CountyStatsViewModel>(
+                            serviceUri.ToUri(),
+                            new ServicePartitionKey(),
+                            "ServiceEndpoint",
+                            "/national/health/" + county.Key,
+                            payload,
+                            cancellationToken
+                            );
 
-                                        using (HttpWebResponse response = (HttpWebResponse) request.GetResponse())
-                                        {
-                                            ServiceEventSource.Current.ServiceMessage(this, "County Data Sent {0}", serviceAddress);
-                                            return Task.FromResult(true);
-                                        }
-                                    }
-                                }
-                            },
-                            cancellationToken);
                     }
                 }
                 catch (TimeoutException te)
@@ -186,10 +165,6 @@ namespace HealthMetrics.CountyService
                         "CountyService encountered an exception trying to send data to National Service: FabricTransientException in RunAsync: {0}",
                         fte.ToString());
                 }
-                catch (WebException)
-                {
-                    // transient error. Retry.
-                }
                 catch (FabricNotPrimaryException)
                 {
                     // not primary any more, time to quit.
@@ -197,7 +172,7 @@ namespace HealthMetrics.CountyService
                 }
                 catch (Exception ex)
                 {
-                    ServiceEventSource.Current.ServiceMessage(this, ex.ToString());
+                    ServiceEventSource.Current.ServiceMessage(this, "{0}", ex.ToString());
                     throw;
                 }
             }
@@ -218,14 +193,33 @@ namespace HealthMetrics.CountyService
 
         private void UpdateConfigSettings(ConfigurationSettings configSettings)
         {
-            KeyedCollection<string, ConfigurationProperty> parameters = configSettings.Sections["HealthMetrics.CountyService.Settings"].Parameters;
-
-            this.nationalServiceInstanceUri = new ServiceUriBuilder(parameters["NationalServiceName"].Value).ToUri();
+            lock (ConfigPackageLockObject)
+            {
+                this.configPackageSettings = configSettings.Sections[ConfigSectionName].Parameters;
+            }
         }
 
         private void CodePackageActivationContext_ConfigurationPackageModifiedEvent(object sender, PackageModifiedEventArgs<ConfigurationPackage> e)
         {
             this.UpdateConfigSettings(e.NewPackage.Settings);
+        }
+
+        private string GetSetting(string key)
+        {
+            lock (ConfigPackageLockObject)
+            {
+                return this.configPackageSettings[key].Value;
+            }
+        }
+
+        private void InitConfig()
+        {
+            ConfigurationPackage configPackage = this.Context.CodePackageActivationContext.GetConfigurationPackageObject("Config");
+
+            this.Context.CodePackageActivationContext.ConfigurationPackageModifiedEvent
+                += this.CodePackageActivationContext_ConfigurationPackageModifiedEvent;
+
+            this.UpdateConfigSettings(configPackage.Settings);
         }
     }
 }
