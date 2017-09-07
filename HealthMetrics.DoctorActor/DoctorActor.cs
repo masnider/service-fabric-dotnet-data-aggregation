@@ -48,7 +48,7 @@ namespace HealthMetrics.DoctorActor
         public async Task NewAsync(string name, CountyRecord countyRecord)
         {
             await this.StateManager.SetStateAsync<string>("Name", name);
-            await this.StateManager.SetStateAsync<CountyRecord>("CountyRecord", countyRecord);
+            await this.StateManager.SetStateAsync<CountyRecord>("CountyRecord", countyRecord);      
             await this.StateManager.SetStateAsync<long>("HealthReportCount", 0);
             await this.StateManager.SetStateAsync<Dictionary<Guid, DoctorPatientState>>("PersonHealthStatuses", new Dictionary<Guid, DoctorPatientState>());
             await this.RegisterReminderAsync(GenerateHealthDataAsyncReminder, null, TimeSpan.FromSeconds(this.random.Next(5, 15)), TimeSpan.FromSeconds(10));
@@ -136,9 +136,6 @@ namespace HealthMetrics.DoctorActor
                         ServiceUriBuilder serviceUri = new ServiceUriBuilder("HealthMetrics.CountyService");
                         //ServicePartitionKey partitionKey = 
                         Guid id = this.Id.GetGuidId();
-
-                        ServicePrimer primer = new ServicePrimer();
-                        await primer.WaitForStatefulService(serviceUri.ToUri(), CancellationToken.None);
 
                         await FabricHttpClient.MakePostRequest<string, DoctorStatsViewModel>(
                             serviceUri.ToUri(),

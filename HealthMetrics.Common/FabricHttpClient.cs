@@ -5,18 +5,15 @@
 
 namespace System.Net.Http
 {
-    using System.Fabric;
-    using System.Threading;
-    using System.Threading.Tasks;
     using HealthMetrics.Common;
     using Microsoft.ServiceFabric.Services.Client;
     using Microsoft.ServiceFabric.Services.Communication.Client;
-    using System.Collections.Concurrent;
-    using System.IO;
     using Newtonsoft.Json;
-    using System.Net.Http.Formatting;
-    using System.Net.Http.Headers;
-    using System.Text;
+    using System.Collections.Concurrent;
+    using System.Fabric;
+    using System.IO;
+    using System.Threading;
+    using System.Threading.Tasks;
 
     public static class FabricHttpClient
     {
@@ -109,39 +106,75 @@ namespace System.Net.Http
             return servicePartitionClient.InvokeWithRetryAsync(
                 async client =>
                 {
-                    if (addresses.TryAdd(client.BaseAddress, true))
-                    {
-                        //https://aspnetmonsters.com/2016/08/2016-08-27-httpclientwrong/
-                        //but then http://byterot.blogspot.co.uk/2016/07/singleton-httpclient-dns.html
-                        //so we do this ala https://github.com/NimaAra/Easy.Common/blob/master/Easy.Common/RestClient.cs
-                        ServicePointManager.FindServicePoint(client.BaseAddress).ConnectionLeaseTimeout = 60 * 1000;
-                    }
-
-                    Uri newUri = new Uri(client.BaseAddress, requestPath.TrimStart('/'));
                     HttpResponseMessage response = null;
 
-                    switch (verb)
+                    try
                     {
 
-                        case HttpVerb.GET:
-                            response = await httpClient.GetAsync(newUri, HttpCompletionOption.ResponseHeadersRead, ct);
-                            break;
+                        if (addresses.TryAdd(client.BaseAddress, true))
+                        {
+                            //https://aspnetmonsters.com/2016/08/2016-08-27-httpclientwrong/
+                            //but then http://byterot.blogspot.co.uk/2016/07/singleton-httpclient-dns.html
+                            //so we do this ala https://github.com/NimaAra/Easy.Common/blob/master/Easy.Common/RestClient.cs
+                            ServicePointManager.FindServicePoint(client.BaseAddress).ConnectionLeaseTimeout = 60 * 1000;
+                        }
 
-                        case HttpVerb.POST:
-                            using (StringWriter writer = new StringWriter())
-                            {
-                                using (JsonTextWriter jsonWriter = new JsonTextWriter(writer))
-                                {
-                                    jSerializer.Serialize(jsonWriter, payload);
-                                    await jsonWriter.FlushAsync();
-                                    await writer.FlushAsync();
-                                    response = await httpClient.PostAsync(newUri, new StringContent(writer.ToString(), Encoding.UTF8, "application/json"), ct);
-                                }
-                            }
-                            break;
+                        Uri newUri = new Uri(client.BaseAddress, requestPath.TrimStart('/'));
 
-                        default:
-                            throw new ArgumentException("Unsupported HTTP Verb submitted for HTTP message in HTTPClientExtension");
+
+                        switch (verb)
+                        {
+
+                            case HttpVerb.GET:
+                                response = await httpClient.GetAsync(newUri, HttpCompletionOption.ResponseHeadersRead, ct);
+                                break;
+
+                            case HttpVerb.POST:
+
+                                //works
+                                //using (StringWriter writer = new StringWriter())
+                                //{
+                                //    using (JsonTextWriter jsonWriter = new JsonTextWriter(writer))
+                                //    {
+                                //        jSerializer.Serialize(jsonWriter, payload);
+                                //        await jsonWriter.FlushAsync();
+                                //        await writer.FlushAsync();
+                                //        response = await httpClient.PostAsync(newUri, new StringContent(writer.ToString(), Encoding.UTF8, "application/json"), ct);
+                                //    }
+                                //}
+
+                                //nope
+                                //StreamWriter writer = null;
+                                //using (MemoryStream ms = new MemoryStream())
+                                //{
+                                //    writer = new StreamWriter(ms);
+                                //    using (JsonWriter jwriter = new JsonTextWriter(writer))
+                                //    {
+                                //        jSerializer.Serialize(jwriter, payload);
+                                //        await jwriter.FlushAsync();
+                                //        await writer.FlushAsync();
+
+                                //        HttpContent content = new StreamContent(ms);
+                                //        response = await httpClient.PostAsync(newUri, content, ct);
+                                //    }
+                                //}
+
+                                //if (writer != null)
+                                //{
+                                //    writer.Dispose();
+                                //}
+
+                                //yes
+                                response = await httpClient.PostAsJsonAsync<TPayload>(newUri, payload);
+                                break;
+
+                            default:
+                                throw new ArgumentException("Unsupported HTTP Verb submitted for HTTP message in HTTPClientExtension");
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        var x = e;
                     }
 
                     using (var stream = await response.Content.ReadAsStreamAsync())

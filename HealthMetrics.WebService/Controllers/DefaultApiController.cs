@@ -50,9 +50,6 @@ namespace HealthMetrics.WebService.Controllers
             {
                 ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("NationalServiceInstanceName"));
 
-                ServicePrimer primer = new ServicePrimer();
-                await primer.WaitForStatefulService(serviceUri.ToUri(), CancellationToken.None);
-
                 var result = await FabricHttpClient.MakeGetRequest<List<CountyHealth>>(
                     serviceUri.ToUri(),
                     new ServicePartitionKey(),
@@ -77,9 +74,6 @@ namespace HealthMetrics.WebService.Controllers
             {
 
                 ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("NationalServiceInstanceName"));
-
-                ServicePrimer primer = new ServicePrimer();
-                await primer.WaitForStatefulService(serviceUri.ToUri(), CancellationToken.None);
 
                 var result = await FabricHttpClient.MakeGetRequest<NationalStatsViewModel>(
                     serviceUri.ToUri(),
@@ -111,9 +105,6 @@ namespace HealthMetrics.WebService.Controllers
             {
                 ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("CountyServiceInstanceName"));
 
-                ServicePrimer primer = new ServicePrimer();
-                await primer.WaitForStatefulService(serviceUri.ToUri(), CancellationToken.None);
-
                 var result = await FabricHttpClient.MakeGetRequest<IEnumerable<KeyValuePair<Guid, CountyDoctorStats>>>(
                     serviceUri.ToUri(),
                     new ServicePartitionKey(countyId),
@@ -139,9 +130,6 @@ namespace HealthMetrics.WebService.Controllers
             try
             {
                 ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("CountyServiceInstanceName"));
-
-                ServicePrimer primer = new ServicePrimer();
-                await primer.WaitForStatefulService(serviceUri.ToUri(), CancellationToken.None);
 
                 var result = await FabricHttpClient.MakeGetRequest<HealthIndex>(
                     serviceUri.ToUri(),
@@ -180,9 +168,6 @@ namespace HealthMetrics.WebService.Controllers
                 ActorId bandActorId = new ActorId(bandId);
                 ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("BandActorServiceInstanceName"));
 
-                ServicePrimer primer = new ServicePrimer();
-                await primer.WaitForStatefulService(serviceUri.ToUri(), CancellationToken.None);
-
                 IBandActor actor = ActorProxy.Create<IBandActor>(bandActorId, serviceUri.ToUri());
 
                 return Ok(await actor.GetBandDataAsync());
@@ -220,14 +205,9 @@ namespace HealthMetrics.WebService.Controllers
         {
             ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("BandActorServiceInstanceName"));
             Uri fabricServiceName = serviceUri.ToUri();
-
-            ServicePrimer primer = new ServicePrimer();
-
+            
             CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
             CancellationToken token = cts.Token;
-
-            await primer.WaitForStatefulService(fabricServiceName, token);
-
             FabricClient fc = new FabricClient();
             ServicePartitionList partitions = await fc.QueryManager.GetPartitionListAsync(fabricServiceName);
 

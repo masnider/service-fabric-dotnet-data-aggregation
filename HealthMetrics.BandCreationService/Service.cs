@@ -59,9 +59,6 @@ namespace HealthMetrics.BandCreationService
 
             bag.Prepare();
 
-            ServicePrimer primer = new ServicePrimer();
-            await primer.WaitForStatefulService(this.ActorServiceUri, cancellationToken);
-
             List<Task> tasks = new List<Task>();
 
             if (this.GenerateKnownPeople)
@@ -245,7 +242,6 @@ namespace HealthMetrics.BandCreationService
                 {
                     ServiceEventSource.Current.Message("band already verified, skipping");
                 }
-
 
                 if (!doctorVerified)
                 {

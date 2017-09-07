@@ -96,11 +96,11 @@ $bandCreationServiceType = "HealthMetrics.BandCreationServiceType"
 $bandCreationServiceName = "HealthMetrics.BandCreationService"
 
 $doctorActorServiceType = "DoctorActorServiceType"
-$doctorActorServiceName = "DoctorActorService"
+$doctorActorServiceName = "HealthMetrics.DoctorActorService"
 $doctorServiceReplicaCount = @{$true=1;$false=3}[$singleNode -eq $true]
 
 $bandActorServiceType = "BandActorServiceType"
-$bandActorServiceName= "BandActorService"
+$bandActorServiceName= "HealthMetrics.BandActorService"
 $bandActorReplicaCount = @{$true=1;$false=3}[$singleNode -eq $true]
 
 $parameters = @{}

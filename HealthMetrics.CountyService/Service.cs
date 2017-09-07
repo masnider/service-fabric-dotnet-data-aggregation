@@ -131,9 +131,6 @@ namespace HealthMetrics.CountyService
 
                         ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("NationalServiceName"));
 
-                        ServicePrimer primer = new ServicePrimer();
-                        await primer.WaitForStatefulService(serviceUri.ToUri(), CancellationToken.None);
-
                         await FabricHttpClient.MakePostRequest<string, CountyStatsViewModel>(
                             serviceUri.ToUri(),
                             new ServicePartitionKey(),

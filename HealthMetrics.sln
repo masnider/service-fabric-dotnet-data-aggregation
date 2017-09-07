@@ -26,7 +26,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Readme.md = Readme.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthMetrics.WebService", "HealthMetrics.WebService\HealthMetrics.WebService.csproj", "{B773043D-138B-419F-9080-EC82F5ED7EE5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HealthMetrics.WebService", "HealthMetrics.WebService\HealthMetrics.WebService.csproj", "{B773043D-138B-419F-9080-EC82F5ED7EE5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -108,5 +108,14 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8E521CF7-C11E-436C-8001-8A5A5BED9DBD}
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 EndGlobal
