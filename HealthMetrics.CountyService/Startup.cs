@@ -10,6 +10,7 @@ namespace HealthMetrics.CountyService
     using Microsoft.ServiceFabric.Data;
     using Owin;
     using Web.Service;
+    using WebApiContrib.Formatting;
 
     /// <summary>
     /// OWIN configuration
@@ -35,6 +36,7 @@ namespace HealthMetrics.CountyService
 
             config.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.Always;
             config.MapHttpAttributeRoutes();
+            config.Formatters.Add(new ProtoBufFormatter());
 
             FormatterConfig.ConfigureFormatters(config.Formatters);
             UnityConfig.RegisterComponents(config, this.objectManager, this.indexCalculator);

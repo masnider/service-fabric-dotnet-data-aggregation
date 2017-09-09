@@ -7,8 +7,10 @@ namespace HealthMetrics.DoctorActor.Interfaces
 {
     using System.Runtime.Serialization;
     using HealthMetrics.Common;
+    using ProtoBuf;
 
     [DataContract]
+    [ProtoContract]
     public struct DoctorStatsViewModel
     {
         public DoctorStatsViewModel(int patientCount, long healthReportCount, HealthIndex averageHealthIndex, string doctorName)
@@ -20,15 +22,19 @@ namespace HealthMetrics.DoctorActor.Interfaces
         }
 
         [DataMember]
+        [ProtoMember(0)]
         public int PatientCount { get; private set; }
 
         [DataMember]
+        [ProtoMember(1)]
         public long HealthReportCount { get; private set; }
 
         [DataMember]
+        [ProtoMember(2)]
         public HealthIndex AverageHealthIndex { get; private set; }
 
         [DataMember]
+        [ProtoMember(4)]
         public string DoctorName { get; private set; }
     }
 }

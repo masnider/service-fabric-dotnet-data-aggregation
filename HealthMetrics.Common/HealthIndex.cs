@@ -5,17 +5,21 @@
 
 namespace HealthMetrics.Common
 {
+    using ProtoBuf;
     using System;
     using System.Runtime.Serialization;
 
     [DataContract]
+    [ProtoContract]
     public struct HealthIndex : IComparable, IComparable<HealthIndex>, IEquatable<HealthIndex>
     {
         [DataMember]
+        [ProtoMember(0)]
         private int value;
 
 
         [DataMember]
+        [ProtoMember(1)]
         private bool mode;
 
         public HealthIndex(int value, bool mode)

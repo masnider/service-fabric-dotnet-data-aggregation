@@ -56,9 +56,7 @@ namespace HealthMetrics.CountyService
 
                 await tx.CommitAsync();
             }
-
-            //IEnumerable<KeyValuePair<Guid, CountyDoctorStats>> results = doctors.OrderByDescending((x) => x.Value.AverageHealthIndex);
-
+            
             return doctors.OrderByDescending((x) => x.Value.AverageHealthIndex);
 
 

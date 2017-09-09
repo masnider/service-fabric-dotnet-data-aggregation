@@ -60,6 +60,7 @@ namespace System.Net.Http
                     requestPath,
                     null,
                     HttpVerb.GET,
+                    SerializationSelector.JSON,
                     ct
                     );
         }
@@ -70,6 +71,7 @@ namespace System.Net.Http
             string endpointName,
             string requestPath,
             TPayload payload,
+            SerializationSelector selector,
             CancellationToken ct
         )
         {
@@ -80,6 +82,7 @@ namespace System.Net.Http
                     requestPath,
                     payload,
                     HttpVerb.POST,
+                    selector,
                     ct
                     );
         }
@@ -91,6 +94,7 @@ namespace System.Net.Http
             string requestPath,
             TPayload payload,
             HttpVerb verb,
+            SerializationSelector selector,
             CancellationToken ct
         )
         {

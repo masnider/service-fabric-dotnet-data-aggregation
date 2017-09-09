@@ -137,6 +137,7 @@ namespace HealthMetrics.CountyService
                             "ServiceEndpoint",
                             "/national/health/" + county.Key,
                             payload,
+                            SerializationSelector.JSON,
                             cancellationToken
                             );
 

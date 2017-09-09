@@ -1,0 +1,14 @@
+{
+  "name": "protobuf",
+  "homepage": "https://github.com/dcodeIO/ProtoBuf.js",
+  "version": "6.8.0",
+  "_release": "6.8.0",
+  "_resolution": {
+    "type": "version",
+    "tag": "6.8.0",
+    "commit": "8c6a5976d2e04ebbde957fdd36401f28e22af247"
+  },
+  "_source": "https://github.com/dcodeIO/ProtoBuf.js.git",
+  "_target": "6.8.0",
+  "_originalSource": "protobuf"
+}

@@ -7,8 +7,8 @@
     "topojson": "3.0.0",
     "d3": "4.10.0",
     "d3-composite-projections": "1.2.0",
-    "jqplot": "*"
-
+    "jqplot": "*",
+    "protobuf": "6.8.0"
   },
   "resolutions": {
     "angular": "1.6.6"
