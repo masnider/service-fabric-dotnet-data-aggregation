@@ -15,6 +15,10 @@ namespace HealthMetrics.CountyService
     using HealthMetrics.DoctorActor.Interfaces;
     using Microsoft.ServiceFabric.Data;
     using Microsoft.ServiceFabric.Data.Collections;
+    using System.Net.Http;
+    using ProtoBuf;
+    using System.IO;
+    using ProtoBuf.Meta;
 
     /// <summary>
     /// Default controller.
@@ -36,6 +40,7 @@ namespace HealthMetrics.CountyService
         {
             this.stateManager = stateManager;
             this.indexCalculator = indexCalculator;
+            RuntimeTypeModel.Default.MetadataTimeoutMilliseconds = 300000;
         }
 
         [HttpGet]
@@ -45,7 +50,7 @@ namespace HealthMetrics.CountyService
             IReliableDictionary<Guid, CountyDoctorStats> countyHealth =
                 await this.stateManager.GetOrAddAsync<IReliableDictionary<Guid, CountyDoctorStats>>(
                     string.Format(Service.CountyHealthDictionaryName, countyId));
-            
+
             IList<KeyValuePair<Guid, CountyDoctorStats>> doctorStats = new List<KeyValuePair<Guid, CountyDoctorStats>>();
 
             using (ITransaction tx = this.stateManager.CreateTransaction())
@@ -72,10 +77,23 @@ namespace HealthMetrics.CountyService
         /// <returns></returns>
         [HttpPost]
         [Route("county/health/{countyId}/{doctorId}")]
-        public async Task<IHttpActionResult> Post([FromUri] int countyId, [FromUri] Guid doctorId, [FromBody] DoctorStatsViewModel stats)
+        //0: public async Task Post()
+        //1: public async  Task<IHttpActionResult> Post()
+        //2: public async Task Post(HttpRequestMessage message)
+        //3: public async Task Post([FromUri] int countyId, [FromUri] Guid doctorId, HttpRequestMessage message)
+        //4: public async Task<IHttpActionResult> Post([FromUri] int countyId, [FromUri] Guid doctorId, [FromBody] DoctorStatsViewModel stats)
+        public async Task Post([FromUri] int countyId, [FromUri] Guid doctorId, [FromBody] DoctorStatsViewModel stats)
         {
+
             try
             {
+                //works with 2
+                //DoctorStatsViewModel dsvm;
+                //using (MemoryStream s = new MemoryStream(await message.Content.ReadAsByteArrayAsync()))
+                //{
+                //    dsvm = Serializer.Deserialize<DoctorStatsViewModel>(s);
+                //}
+                
                 IReliableDictionary<int, string> countyNameDictionary =
                     await this.stateManager.GetOrAddAsync<IReliableDictionary<int, string>>(Service.CountyNameDictionaryName);
 
@@ -104,11 +122,12 @@ namespace HealthMetrics.CountyService
                     await tx.CommitAsync();
                 }
 
-                return this.Ok();
+                return;
             }
             catch (Exception e)
             {
-                return this.InternalServerError(e);
+                ServiceEventSource.Current.Message("Exception in CountyHealthController {0}", e);
+                throw;
             }
         }
     }

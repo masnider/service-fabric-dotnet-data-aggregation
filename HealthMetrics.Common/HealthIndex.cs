@@ -14,12 +14,12 @@ namespace HealthMetrics.Common
     public struct HealthIndex : IComparable, IComparable<HealthIndex>, IEquatable<HealthIndex>
     {
         [DataMember]
-        [ProtoMember(0)]
+        [ProtoMember(1)]
         private int value;
 
 
         [DataMember]
-        [ProtoMember(1)]
+        [ProtoMember(2)]
         private bool mode;
 
         public HealthIndex(int value, bool mode)

@@ -31,12 +31,14 @@ namespace HealthMetrics.NationalService
         public Service(StatefulServiceContext serviceContext) : base(serviceContext)
         {
             this.StateManager.StateManagerChanged += this.StateManager_StateManagerChanged;
+            InitStats();
         }
 
         public Service(StatefulServiceContext serviceContext, IReliableStateManagerReplica reliableStateManagerReplica)
             : base(serviceContext, reliableStateManagerReplica)
         {
             this.StateManager.StateManagerChanged += this.StateManager_StateManagerChanged;
+            InitStats();
         }
 
         protected override IEnumerable<ServiceReplicaListener> CreateServiceReplicaListeners()
@@ -122,7 +124,7 @@ namespace HealthMetrics.NationalService
                 NotifyStateManagerSingleEntityChangedEventArgs args = e as NotifyStateManagerSingleEntityChangedEventArgs;
                 if (args.ReliableState.Name.ToString() == "urn:" + HealthStatusDictionary)
                 {
-                    IReliableDictionary<int, NationalCountyStats> dictionary = (IReliableDictionary<int, NationalCountyStats>) args.ReliableState;
+                    IReliableDictionary<int, NationalCountyStats> dictionary = (IReliableDictionary<int, NationalCountyStats>)args.ReliableState;
                     dictionary.DictionaryChanged += this.Dictionary_DictionaryChanged;
                 }
             }
@@ -178,6 +180,13 @@ namespace HealthMetrics.NationalService
                 default:
                     break;
             }
+        }
+
+        private void InitStats()
+        {
+            this.statsDictionary["totalDoctors"] = 0;
+            this.statsDictionary["totalPatientCount"] = 0;
+            this.statsDictionary["totalHealthReportCount"] = 0;
         }
     }
 

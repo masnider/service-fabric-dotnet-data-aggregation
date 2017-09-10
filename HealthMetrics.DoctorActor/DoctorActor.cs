@@ -143,7 +143,7 @@ namespace HealthMetrics.DoctorActor
                             "ServiceEndpoint",
                             String.Format("/county/health/{0}/{1}", countyRecord.CountyId, id),
                             payload,
-                            SerializationSelector.JSON,
+                            SerializationSelector.PBUF,
                             CancellationToken.None
                             );
                     }

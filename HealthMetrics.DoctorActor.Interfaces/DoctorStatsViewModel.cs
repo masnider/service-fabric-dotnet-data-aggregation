@@ -22,15 +22,15 @@ namespace HealthMetrics.DoctorActor.Interfaces
         }
 
         [DataMember]
-        [ProtoMember(0)]
+        [ProtoMember(1)]
         public int PatientCount { get; private set; }
 
         [DataMember]
-        [ProtoMember(1)]
+        [ProtoMember(2)]
         public long HealthReportCount { get; private set; }
 
         [DataMember]
-        [ProtoMember(2)]
+        [ProtoMember(3)]
         public HealthIndex AverageHealthIndex { get; private set; }
 
         [DataMember]

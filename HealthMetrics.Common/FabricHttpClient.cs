@@ -9,6 +9,8 @@ namespace System.Net.Http
     using Microsoft.ServiceFabric.Services.Client;
     using Microsoft.ServiceFabric.Services.Communication.Client;
     using Newtonsoft.Json;
+    using ProtoBuf;
+    using ProtoBuf.Meta;
     using System.Collections.Concurrent;
     using System.Fabric;
     using System.IO;
@@ -35,6 +37,10 @@ namespace System.Net.Http
             }
 
             httpClient = new HttpClient(handler);
+            RuntimeTypeModel.Default.MetadataTimeoutMilliseconds = 300000;
+            //request.Timeout = (int)httpClient.tim.TotalMilliseconds;
+            //request.ReadWriteTimeout = (int)client.ReadWriteTimeout.TotalMilliseconds;
+
 
             clientFactory = new HttpCommunicationClientFactory(
                 ServicePartitionResolver.GetDefault(),
@@ -75,6 +81,9 @@ namespace System.Net.Http
             CancellationToken ct
         )
         {
+
+            //Serializer.PrepareSerializer<TPayload>();
+
             return MakeHttpRequest<TReturn, TPayload>(
                     serviceName,
                     key,
@@ -111,6 +120,8 @@ namespace System.Net.Http
                 async client =>
                 {
                     HttpResponseMessage response = null;
+                    //request.Timeout = (int)client.OperationTimeout.TotalMilliseconds;
+                    //request.ReadWriteTimeout = (int)client.ReadWriteTimeout.TotalMilliseconds;
 
                     try
                     {
@@ -131,6 +142,7 @@ namespace System.Net.Http
 
                             case HttpVerb.GET:
                                 response = await httpClient.GetAsync(newUri, HttpCompletionOption.ResponseHeadersRead, ct);
+
                                 break;
 
                             case HttpVerb.POST:
@@ -168,8 +180,16 @@ namespace System.Net.Http
                                 //    writer.Dispose();
                                 //}
 
+
                                 //yes
-                                response = await httpClient.PostAsJsonAsync<TPayload>(newUri, payload);
+                                if (selector == SerializationSelector.JSON)
+                                {
+                                    response = await httpClient.PostAsJsonAsync<TPayload>(newUri, payload);
+                                }
+                                else if (selector == SerializationSelector.PBUF)
+                                {
+                                    response = await httpClient.PostAsync(newUri, new ProtoContent(payload));
+                                }
                                 break;
 
                             default:
@@ -181,17 +201,30 @@ namespace System.Net.Http
                         var x = e;
                     }
 
-                    using (var stream = await response.Content.ReadAsStreamAsync())
-                    {
-                        using (var streamReader = new StreamReader(stream))
-                        {
-                            using (JsonReader jsonReader = new JsonTextReader(streamReader))
-                            {
-                                return jSerializer.Deserialize<TReturn>(jsonReader);
-                            }
-                        }
-                    }
+                    TReturn value;
+                    return value = (selector == SerializationSelector.JSON) ? await ReturnJsonResult<TReturn>(response) : await ReturnPBufResult<TReturn>(response);
+
                 }, ct);
         }
+
+        private static async Task<TReturn> ReturnJsonResult<TReturn>(HttpResponseMessage response)
+        {
+            using (var stream = await response.Content.ReadAsStreamAsync())
+            {
+                using (var streamReader = new StreamReader(stream))
+                {
+                    using (JsonReader jsonReader = new JsonTextReader(streamReader))
+                    {
+                        return jSerializer.Deserialize<TReturn>(jsonReader);
+                    }
+                }
+            }
+        }
+
+        private static async Task<TReturn> ReturnPBufResult<TReturn>(HttpResponseMessage response)
+        {
+            return Serializer.Deserialize<TReturn>(await response.Content.ReadAsStreamAsync());
+        }
+
     }
 }
