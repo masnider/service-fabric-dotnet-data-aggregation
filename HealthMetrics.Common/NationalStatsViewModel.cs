@@ -5,10 +5,13 @@
 
 namespace HealthMetrics.Common
 {
+    using ProtoBuf;
     using System;
+    using System.Globalization;
     using System.Runtime.Serialization;
 
     [DataContract]
+    [ProtoContract]
     public struct NationalStatsViewModel
     {
         public NationalStatsViewModel(long doctorCount, long patientCount, long healthReportCount, long averageHealthIndex, DateTimeOffset creationDateTime)
@@ -21,18 +24,51 @@ namespace HealthMetrics.Common
         }
 
         [DataMember]
+        [ProtoMember(1)]
         public long DoctorCount { get; private set; }
 
         [DataMember]
+        [ProtoMember(2)]
         public long PatientCount { get; private set; }
 
         [DataMember]
+        [ProtoMember(3)]
         public long HealthReportCount { get; private set; }
 
         [DataMember]
+        [ProtoMember(4)]
         public long AverageHealthIndex { get; private set; }
 
         [DataMember]
-        public DateTimeOffset StartTimeOffset { get; private set; }
+        [ProtoMember(5)]
+        public DateTimeOffsetSurrogate StartTimeOffset { get; set; }
+
+    }
+
+
+    //System.InvalidOperationException: No serializer defined for type: System.DateTimeOffset
+    //Code to solve both issues from: https://stackoverflow.com/a/39090557/4852187 
+    [ProtoContract]
+    public class DateTimeOffsetSurrogate
+    {
+        [ProtoMember(1)]
+        public string DateTimeString { get; set; }
+
+        public static implicit operator DateTimeOffsetSurrogate(DateTimeOffset value)
+        {
+            return new DateTimeOffsetSurrogate { DateTimeString = value.ToString("o") };
+        }
+
+        public static implicit operator DateTimeOffset(DateTimeOffsetSurrogate value)
+        {
+            try
+            {
+                return DateTimeOffset.Parse(value.DateTimeString, null, DateTimeStyles.RoundtripKind);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Unable to parse date time value: " + value.DateTimeString, ex);
+            }
+        }
     }
 }

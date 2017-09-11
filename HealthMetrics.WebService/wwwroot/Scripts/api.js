@@ -31,10 +31,14 @@
 
     this.httpGetJson = function (url, result) {
         $.ajax({
+            headers: {
+                "Accept":"application/x-protobuf",
+                "Content-Type":"application/x-protobuf"
+            },
             url: url,
             type: 'GET',
-            contentType: 'application/json',
-            datatype: 'json',
+            contentType: 'application/x-protobuf',
+            datatype: 'protobuf',
             cache: false
         })
 	   .done(function (data) {

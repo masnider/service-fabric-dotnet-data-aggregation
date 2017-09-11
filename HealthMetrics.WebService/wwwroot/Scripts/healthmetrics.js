@@ -1,5 +1,4 @@
-﻿
-var api = new Api();
+﻿var api = new Api();
 
 function MetricsApp() {
     var self = this;
@@ -58,7 +57,7 @@ function MetricsApp() {
             var messageRate = $('#messageRate')
 
             if (rollingAverage.currentCount == 0) {
-                var creationDate = new Date(statsData.startTimeOffset);
+                var creationDate = new Date(statsData.startTimeOffset.dateTimeString);
                 var now = new Date();
                 rollingAverage.currentCount = Math.round((now - creationDate) / 1000);
                 rollingAverage.currentAverage = Math.round((statsData.healthReportCount / rollingAverage.currentCount) * 100) / 100;

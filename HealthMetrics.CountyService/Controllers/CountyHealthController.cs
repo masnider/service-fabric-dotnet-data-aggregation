@@ -77,23 +77,11 @@ namespace HealthMetrics.CountyService
         /// <returns></returns>
         [HttpPost]
         [Route("county/health/{countyId}/{doctorId}")]
-        //0: public async Task Post()
-        //1: public async  Task<IHttpActionResult> Post()
-        //2: public async Task Post(HttpRequestMessage message)
-        //3: public async Task Post([FromUri] int countyId, [FromUri] Guid doctorId, HttpRequestMessage message)
-        //4: public async Task<IHttpActionResult> Post([FromUri] int countyId, [FromUri] Guid doctorId, [FromBody] DoctorStatsViewModel stats)
         public async Task Post([FromUri] int countyId, [FromUri] Guid doctorId, [FromBody] DoctorStatsViewModel stats)
         {
 
             try
-            {
-                //works with 2
-                //DoctorStatsViewModel dsvm;
-                //using (MemoryStream s = new MemoryStream(await message.Content.ReadAsByteArrayAsync()))
-                //{
-                //    dsvm = Serializer.Deserialize<DoctorStatsViewModel>(s);
-                //}
-                
+            {                
                 IReliableDictionary<int, string> countyNameDictionary =
                     await this.stateManager.GetOrAddAsync<IReliableDictionary<int, string>>(Service.CountyNameDictionaryName);
 

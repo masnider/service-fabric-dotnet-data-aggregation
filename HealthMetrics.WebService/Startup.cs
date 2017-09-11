@@ -10,6 +10,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Owin.StaticFiles;
 using Microsoft.AspNetCore.ResponseCompression;
 using System.IO.Compression;
+using System.Net.Http.Headers;
+using AspNetCoreProtobuf.Formatters;
 
 namespace HealthMetrics.WebService
 {
@@ -22,6 +24,7 @@ namespace HealthMetrics.WebService
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
                 .AddEnvironmentVariables();
+            
             Configuration = builder.Build();
         }
 
@@ -32,6 +35,13 @@ namespace HealthMetrics.WebService
         {
             // Add framework services.
             services.AddMvc();
+            services.AddMvc(options =>
+            {
+                options.InputFormatters.Add(new ProtobufInputFormatter());
+                options.OutputFormatters.Add(new ProtobufOutputFormatter());
+                options.FormatterMappings.SetMediaTypeMappingForFormat("protobuf", "application/x-protobuf");
+            });
+
             services.AddResponseCompression(options =>
             {
                 options.Providers.Add<GzipCompressionProvider>();
@@ -51,8 +61,6 @@ namespace HealthMetrics.WebService
             loggerFactory.AddDebug();
 
             app.UseStaticFiles();
-            
-
             app.UseMvc();
         }
     }

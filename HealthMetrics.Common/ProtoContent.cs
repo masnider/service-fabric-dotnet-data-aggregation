@@ -13,17 +13,6 @@ namespace HealthMetrics.Common
 {
     public class ProtoContent : HttpContent
     {
-        //    protected override Task SerializeToStreamAsync(Stream stream, TransportContext context)
-        //    {
-        //        throw new NotImplementedException();
-        //    }
-
-        //    protected override bool TryComputeLength(out long length)
-        //    {
-        //        throw new NotImplementedException();
-        //    }
-        //}
-
         public object SerializationTarget { get; private set; }
         private byte[] data;
         private long size = -1;
@@ -36,15 +25,12 @@ namespace HealthMetrics.Common
                 MemoryStream ms = new MemoryStream();
                 Serializer.Serialize(ms, SerializationTarget);
                 ms.Flush();
+
+                // https://stackoverflow.com/a/4960973/4852187
+                // Otherwise - https://github.com/svn2github/protobuf-net/blob/master/protobuf-net/ProtoReader.cs#L1320
                 data = ms.GetBuffer();
                 size = ms.Length;
-                
-                //4.6
-                //if (!ms.TryGetBuffer(out data))
-                //{
-                //    throw new ArgumentException("Tried to get buffer for protobuf and failed");
-                //}
-
+               
             }
             catch (Exception e)
             {

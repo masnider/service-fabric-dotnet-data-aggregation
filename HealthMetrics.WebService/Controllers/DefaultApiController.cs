@@ -74,10 +74,10 @@ namespace HealthMetrics.WebService.Controllers
             {
 
                 ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("NationalServiceInstanceName"));
-
+                var key = new ServicePartitionKey();
                 var result = await FabricHttpClient.MakeGetRequest<NationalStatsViewModel>(
                     serviceUri.ToUri(),
-                    new ServicePartitionKey(),
+                    key,
                     "ServiceEndpoint",
                     "/national/stats",
                     CancellationToken.None
@@ -161,7 +161,7 @@ namespace HealthMetrics.WebService.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("api/patients/{bandId}")]
-        public async Task<IActionResult> GetPatientData(Guid bandId)
+        public async Task<BandDataViewModel> GetPatientData(Guid bandId)
         {
             try
             {
@@ -170,7 +170,7 @@ namespace HealthMetrics.WebService.Controllers
 
                 IBandActor actor = ActorProxy.Create<IBandActor>(bandActorId, serviceUri.ToUri());
 
-                return Ok(await actor.GetBandDataAsync());
+                return await actor.GetBandDataAsync();
             }
             catch (AggregateException ae)
             {

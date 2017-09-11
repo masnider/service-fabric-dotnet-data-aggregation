@@ -25,6 +25,8 @@
     <PackageReference Include="Microsoft.ServiceFabric.Data" Version="2.7.198" />
     <PackageReference Include="Microsoft.ServiceFabric.Services" Version="2.7.198" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+    <PackageReference Include="protobuf-net" Version="2.3.2" />
+    <PackageReference Include="WebApiContrib.Formatting.ProtoBuf" Version="0.9.5" />
   </ItemGroup>
 
   <ItemGroup>

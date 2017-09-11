@@ -14,6 +14,7 @@ namespace System.Net.Http
     using System.Collections.Concurrent;
     using System.Fabric;
     using System.IO;
+    using System.Net.Http.Headers;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -37,10 +38,10 @@ namespace System.Net.Http
             }
 
             httpClient = new HttpClient(handler);
-            RuntimeTypeModel.Default.MetadataTimeoutMilliseconds = 300000;
-            //request.Timeout = (int)httpClient.tim.TotalMilliseconds;
-            //request.ReadWriteTimeout = (int)client.ReadWriteTimeout.TotalMilliseconds;
 
+            //https://stackoverflow.com/questions/7372585/protobuf-net-exception-timeout-while-inspecting-metadata
+            //https://stackoverflow.com/questions/17096359/is-protobuf-net-thread-safe 
+            RuntimeTypeModel.Default.MetadataTimeoutMilliseconds = 300000;
 
             clientFactory = new HttpCommunicationClientFactory(
                 ServicePartitionResolver.GetDefault(),
@@ -66,7 +67,7 @@ namespace System.Net.Http
                     requestPath,
                     null,
                     HttpVerb.GET,
-                    SerializationSelector.JSON,
+                    SerializationSelector.PBUF,
                     ct
                     );
         }
@@ -136,52 +137,24 @@ namespace System.Net.Http
 
                         Uri newUri = new Uri(client.BaseAddress, requestPath.TrimStart('/'));
 
-
                         switch (verb)
                         {
 
                             case HttpVerb.GET:
-                                response = await httpClient.GetAsync(newUri, HttpCompletionOption.ResponseHeadersRead, ct);
 
+                                if (selector == SerializationSelector.PBUF)
+                                {
+                                    httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/x-protobuf"));
+                                }
+                                else if (selector == SerializationSelector.JSON)
+                                {
+                                    httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                                }
+
+                                response = await httpClient.GetAsync(newUri, HttpCompletionOption.ResponseHeadersRead, ct);
                                 break;
 
                             case HttpVerb.POST:
-
-                                //works
-                                //using (StringWriter writer = new StringWriter())
-                                //{
-                                //    using (JsonTextWriter jsonWriter = new JsonTextWriter(writer))
-                                //    {
-                                //        jSerializer.Serialize(jsonWriter, payload);
-                                //        await jsonWriter.FlushAsync();
-                                //        await writer.FlushAsync();
-                                //        response = await httpClient.PostAsync(newUri, new StringContent(writer.ToString(), Encoding.UTF8, "application/json"), ct);
-                                //    }
-                                //}
-
-                                //nope
-                                //StreamWriter writer = null;
-                                //using (MemoryStream ms = new MemoryStream())
-                                //{
-                                //    writer = new StreamWriter(ms);
-                                //    using (JsonWriter jwriter = new JsonTextWriter(writer))
-                                //    {
-                                //        jSerializer.Serialize(jwriter, payload);
-                                //        await jwriter.FlushAsync();
-                                //        await writer.FlushAsync();
-
-                                //        HttpContent content = new StreamContent(ms);
-                                //        response = await httpClient.PostAsync(newUri, content, ct);
-                                //    }
-                                //}
-
-                                //if (writer != null)
-                                //{
-                                //    writer.Dispose();
-                                //}
-
-
-                                //yes
                                 if (selector == SerializationSelector.JSON)
                                 {
                                     response = await httpClient.PostAsJsonAsync<TPayload>(newUri, payload);

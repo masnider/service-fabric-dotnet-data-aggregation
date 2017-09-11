@@ -36,7 +36,10 @@ namespace HealthMetrics.CountyService
 
             config.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.Always;
             config.MapHttpAttributeRoutes();
+
+            //https://damienbod.com/2014/01/11/using-protobuf-net-media-formatter-with-web-api-2/
             config.Formatters.Add(new ProtoBufFormatter());
+            
 
             FormatterConfig.ConfigureFormatters(config.Formatters);
             UnityConfig.RegisterComponents(config, this.objectManager, this.indexCalculator);

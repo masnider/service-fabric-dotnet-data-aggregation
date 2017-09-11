@@ -10,6 +10,7 @@ namespace HealthMetrics.NationalService
     using Microsoft.ServiceFabric.Data;
     using Owin;
     using Web.Service;
+    using WebApiContrib.Formatting;
 
     /// <summary>
     /// OWIN configuration
@@ -37,6 +38,9 @@ namespace HealthMetrics.NationalService
 
             config.IncludeErrorDetailPolicy = IncludeErrorDetailPolicy.Always;
             config.MapHttpAttributeRoutes();
+
+            //https://damienbod.com/2014/01/11/using-protobuf-net-media-formatter-with-web-api-2/
+            config.Formatters.Add(new ProtoBufFormatter());
 
             FormatterConfig.ConfigureFormatters(config.Formatters);
             UnityConfig.RegisterComponents(config, this.objectManager, this.updatedCounties, this.statsDictionary);
