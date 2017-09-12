@@ -121,8 +121,6 @@ namespace System.Net.Http
                 async client =>
                 {
                     HttpResponseMessage response = null;
-                    //request.Timeout = (int)client.OperationTimeout.TotalMilliseconds;
-                    //request.ReadWriteTimeout = (int)client.ReadWriteTimeout.TotalMilliseconds;
 
                     try
                     {
@@ -172,6 +170,7 @@ namespace System.Net.Http
                     catch (Exception e)
                     {
                         var x = e;
+                        throw;
                     }
 
                     TReturn value;

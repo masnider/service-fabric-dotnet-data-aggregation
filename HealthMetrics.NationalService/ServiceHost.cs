@@ -19,10 +19,6 @@ namespace HealthMetrics.NationalService
         {
             try
             {
-                //while(!Debugger.IsAttached)
-                //{
-                //    Thread.Sleep(TimeSpan.FromSeconds(5));
-                //}
 
                 ServicePointManager.DefaultConnectionLimit = 1024;
                 ServicePointManager.SetTcpKeepAlive(true, 2000, 1000);

@@ -31,6 +31,7 @@ namespace HealthMetrics.NationalService
         public Service(StatefulServiceContext serviceContext) : base(serviceContext)
         {
             this.StateManager.StateManagerChanged += this.StateManager_StateManagerChanged;
+            this.StateManager.TryAddStateSerializer<NationalCountyStats>(new NationalCountyStatsSerializer());
             InitStats();
         }
 
@@ -38,6 +39,7 @@ namespace HealthMetrics.NationalService
             : base(serviceContext, reliableStateManagerReplica)
         {
             this.StateManager.StateManagerChanged += this.StateManager_StateManagerChanged;
+            this.StateManager.TryAddStateSerializer<NationalCountyStats>(new NationalCountyStatsSerializer());
             InitStats();
         }
 

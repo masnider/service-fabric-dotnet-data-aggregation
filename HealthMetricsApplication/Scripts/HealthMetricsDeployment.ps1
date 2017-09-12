@@ -5,15 +5,15 @@
 #or the application parameters mechanism provided via the VS tooling. It is meant to serve as an example
 #of manual application and service creation and configuration. 
 
-$cloud = $false
-$singleNode = $true
+$cloud = $true
+$singleNode = $false
 $certSecure = $false
 $AADSecure = $false
 $constrainedNodeTypes = $false
 
 if($cloud)
 {
-    $cloudAddress = ""
+    $cloudAddress = "xrg3.trafficmanager.net"
 }
 
 if($certSecure)
@@ -44,9 +44,9 @@ if($cloud)
     $webServiceInstanceCount = -1
     $bandCreationInstanceCount = -1
     $bandsPerService = "3000"
-    $countyServicePartitionCount = @{$true=1;$false=10}[$singleNode -eq $true]
-    $bandActorServicePartitionCount = @{$true=1;$false=10}[$singleNode -eq $true]
-    $doctorActorServicePartitionCount = @{$true=1;$false=10}[$singleNode -eq $true]
+    $countyServicePartitionCount = @{$true=1;$false=30}[$singleNode -eq $true]
+    $bandActorServicePartitionCount = @{$true=1;$false=30}[$singleNode -eq $true]
+    $doctorActorServicePartitionCount = @{$true=1;$false=30}[$singleNode -eq $true]
     $imageStoreConnectionString = "fabric:ImageStore"
 }
 else

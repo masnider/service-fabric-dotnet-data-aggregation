@@ -41,6 +41,7 @@ namespace HealthMetrics.CountyService
         public Service(StatefulServiceContext serviceContext) : base(serviceContext)
         {
             InitConfig();
+            this.StateManager.TryAddStateSerializer<CountyDoctorStats>(new CountyDoctorStatsSerializer());
             this.indexCalculator = new HealthIndexCalculator(serviceContext);
         }
 
@@ -48,6 +49,7 @@ namespace HealthMetrics.CountyService
             : base(serviceContext, reliableStateManagerReplica)
         {
             InitConfig();
+            this.StateManager.TryAddStateSerializer<CountyDoctorStats>(new CountyDoctorStatsSerializer());
             this.indexCalculator = new HealthIndexCalculator(serviceContext);
         }
 

@@ -7,8 +7,9 @@ namespace HealthMetrics.NationalService.Models
 {
     using System.Runtime.Serialization;
     using HealthMetrics.Common;
+    using ProtoBuf;
 
-    [DataContract]
+    [ProtoContract]
     internal struct NationalCountyStats
     {
         public NationalCountyStats(int doctorCount, int patientCount, long healthReportCount, HealthIndex averageHealthIndex)
@@ -19,16 +20,16 @@ namespace HealthMetrics.NationalService.Models
             this.HealthReportCount = healthReportCount;
         }
 
-        [DataMember]
+        [ProtoMember(1)]
         public int DoctorCount { get; private set; }
 
-        [DataMember]
+        [ProtoMember(2)]
         public int PatientCount { get; private set; }
 
-        [DataMember]
+        [ProtoMember(3)]
         public long HealthReportCount { get; private set; }
 
-        [DataMember]
+        [ProtoMember(4)]
         public HealthIndex AverageHealthIndex { get; private set; }
     }
 }

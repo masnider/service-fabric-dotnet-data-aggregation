@@ -5,11 +5,9 @@
 
 namespace HealthMetrics.CountyService
 {
-    using System.Runtime.Serialization;
     using HealthMetrics.Common;
     using ProtoBuf;
 
-    [DataContract]
     [ProtoContract]
     public struct CountyDoctorStats
     {
@@ -21,19 +19,15 @@ namespace HealthMetrics.CountyService
             this.DoctorName = doctorName;
         }
 
-        [DataMember]
         [ProtoMember(1)]
         public string DoctorName { get; private set; }
 
-        [DataMember]
         [ProtoMember(2)]
         public int PatientCount { get; private set; }
 
-        [DataMember]
         [ProtoMember(3)]
         public long HealthReportCount { get; private set; }
 
-        [DataMember]
         [ProtoMember(4)]
         public HealthIndex AverageHealthIndex { get; private set; }
     }
