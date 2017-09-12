@@ -252,9 +252,6 @@
     <Compile Include="ProtoContent.cs" />
     <Compile Include="SerializationSelector.cs" />
     <Compile Include="HttpVerb.cs" />
-    <Compile Include="Listeners\ListenerUtilities.cs" />
-    <Compile Include="Listeners\OwinCommunicationListener.cs" />
-    <Compile Include="Listeners\WebSocketListener.cs" />
     <Compile Include="NationalStatsViewModel.cs" />
     <Compile Include="CountyStatsViewModel.cs" />
     <Compile Include="HttpCommunicationClient.cs" />
@@ -264,24 +261,11 @@
     <Compile Include="IOwinAppBuilder.cs" />
     <Compile Include="HttpCommunicationListener.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Serializers\DataContractWsSerializer.cs" />
     <Compile Include="Serializers\IWsSerializer.cs" />
     <Compile Include="Serializers\JsonNetWsSerializer.cs" />
     <Compile Include="Serializers\ProtobufWsSerializer.cs" />
     <Compile Include="ServiceUriBuilder.cs" />
     <Compile Include="ServiceUtilities\ServiceConfigReader.cs" />
-    <Compile Include="ServiceUtilities\StringUtils.cs" />
-    <Compile Include="WebSocketUtilities\IWebSocketConnectionHandler.cs" />
-    <Compile Include="WebSocketUtilities\WebSocketApp.cs" />
-    <Compile Include="WebSocketUtilities\WebSocketMessageForwarder.cs" />
-    <Compile Include="WebSocketUtilities\WebSocketMessageHandler.cs" />
-    <Compile Include="WebSocketUtilities\WsCommunicationClient.cs" />
-    <Compile Include="WebSocketUtilities\WsCommunicationClientFactory.cs" />
-    <Compile Include="WebSocketUtilities\WsCommunicationExceptionHandler.cs" />
-    <Compile Include="WebSocketUtilities\WsMessage.cs" />
-    <Compile Include="WebSocketUtilities\WsRequestMessage.cs" />
-    <Compile Include="WebSocketUtilities\WsResponseMessage.cs" />
-    <Compile Include="WebSocketUtilities\WsResult.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

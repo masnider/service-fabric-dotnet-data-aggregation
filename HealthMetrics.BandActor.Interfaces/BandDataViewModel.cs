@@ -9,8 +9,10 @@ namespace HealthMetrics.BandActor.Interfaces
     using System.Collections.Generic;
     using System.Runtime.Serialization;
     using HealthMetrics.Common;
+    using ProtoBuf;
 
     [DataContract]
+    [ProtoContract]
     public struct BandDataViewModel
     {
         public BandDataViewModel(
@@ -23,10 +25,10 @@ namespace HealthMetrics.BandActor.Interfaces
         {
             this.DoctorId = doctorId;
             this.PersonId = bandId;
-            this.PersonName = patientName;
-            this.CountyInfo = countyInfo;
-            this.HealthIndexValue = healthIndexValue;
-            this.HeartRateHistory = heartRateHistory;
+            this.PersonName = patientName; //used
+            this.CountyInfo = countyInfo; //used
+            this.HealthIndexValue = healthIndexValue; //used
+            this.HeartRateHistory = heartRateHistory; //used
         }
 
         [DataMember]
@@ -36,15 +38,19 @@ namespace HealthMetrics.BandActor.Interfaces
         public Guid PersonId { get; private set; }
 
         [DataMember]
+        [ProtoMember(1)]
         public string PersonName { get; private set; }
 
         [DataMember]
+        [ProtoMember(2)]
         public CountyRecord CountyInfo { get; private set; }
 
         [DataMember]
+        [ProtoMember(3)]
         public HealthIndex HealthIndexValue { get; private set; }
 
         [DataMember]
+        [ProtoMember(4)]
         public IEnumerable<HeartRateRecord> HeartRateHistory { get; private set; }
 
         public override string ToString()

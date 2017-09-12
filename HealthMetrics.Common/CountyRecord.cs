@@ -5,18 +5,23 @@
 
 namespace HealthMetrics.Common
 {
+    using ProtoBuf;
     using System.Runtime.Serialization;
 
     [DataContract]
+    [ProtoContract]
     public struct CountyRecord
     {
         [DataMember]
+        [ProtoMember(1)]
         public string CountyName { get; set; }
 
         [DataMember]
+        [ProtoMember(2)]
         public int CountyId { get; set; }
 
         [DataMember]
+        [ProtoMember(3)]
         public double CountyHealth { get; set; }
 
         public CountyRecord(string name, int id, double countyHealth)

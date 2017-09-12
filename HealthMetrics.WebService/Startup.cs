@@ -60,6 +60,7 @@ namespace HealthMetrics.WebService
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
 
+            app.UseResponseCompression();
             app.UseStaticFiles();
             app.UseMvc();
         }
