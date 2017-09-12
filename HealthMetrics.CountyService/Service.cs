@@ -111,18 +111,15 @@ namespace HealthMetrics.CountyService
                         }
                             
                         foreach (KeyValuePair<Guid, CountyDoctorStats> item in records)
-                        {
-                            
+                        {   
                             //expandedAverage = priorAvg * totalDoctorCount;
                             //newTotal = expandedAverage + item.Value.AverageHealthIndex.GetValue();
 
                             totalDoctorCount++;
                             totalPatientCount += item.Value.PatientCount;
                             totalHealthReportCount += item.Value.HealthReportCount;
-
-
+                            
                             //priorAvg = newTotal / totalHealthReportCount;
-
                         }
 
                         HealthIndex avgHealth = this.indexCalculator.ComputeAverageIndex(records.Select(x => x.Value.AverageHealthIndex));
