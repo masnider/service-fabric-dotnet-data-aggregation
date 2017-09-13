@@ -247,6 +247,7 @@
     <Compile Include="HashUtil.cs" />
     <Compile Include="HealthIndex.cs" />
     <Compile Include="HealthIndexCalculator.cs" />
+    <Compile Include="JsonContent.cs" />
     <Compile Include="ProtobufInputFormatter.cs" />
     <Compile Include="ProtobufOutputFormatter.cs" />
     <Compile Include="ProtoContent.cs" />

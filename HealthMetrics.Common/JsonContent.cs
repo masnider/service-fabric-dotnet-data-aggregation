@@ -6,30 +6,23 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
-using ProtoBuf;
+using Newtonsoft.Json;
 
 namespace HealthMetrics.Common
 {
-    public class ProtoContent : HttpContent
+    public class JsonContent : HttpContent
     {
         public object SerializationTarget { get; private set; }
         private byte[] data;
         private long size = -1;
-        public ProtoContent(object serializationTarget)
+        public JsonContent(object serializationTarget)
         {
             try
             {
                 SerializationTarget = serializationTarget;
-                this.Headers.ContentType = new MediaTypeHeaderValue("application/x-protobuf");
-                MemoryStream ms = new MemoryStream();
-                Serializer.Serialize(ms, SerializationTarget);
-                ms.Flush();
-
-                // https://stackoverflow.com/a/4960973/4852187
-                // Otherwise - https://github.com/svn2github/protobuf-net/blob/master/protobuf-net/ProtoReader.cs#L1320
-                data = ms.GetBuffer();
-                size = ms.Length;
-               
+                var header = new MediaTypeHeaderValue("application/json");
+                data = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(SerializationTarget));
+                size = data.Length;
             }
             catch (Exception e)
             {

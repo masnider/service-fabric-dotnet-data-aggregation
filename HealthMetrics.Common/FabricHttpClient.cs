@@ -140,22 +140,25 @@ namespace System.Net.Http
 
                             case HttpVerb.GET:
 
+                                HttpRequestMessage msg = new HttpRequestMessage(HttpMethod.Get, newUri);
+
                                 if (selector == SerializationSelector.PBUF)
                                 {
-                                    httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/x-protobuf"));
+                                    msg.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/x-protobuf"));
                                 }
                                 else if (selector == SerializationSelector.JSON)
                                 {
-                                    httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                                    msg.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                                 }
 
-                                response = await httpClient.GetAsync(newUri, HttpCompletionOption.ResponseHeadersRead, ct);
+                                response = await httpClient.SendAsync(msg, HttpCompletionOption.ResponseHeadersRead, ct);
                                 break;
 
                             case HttpVerb.POST:
                                 if (selector == SerializationSelector.JSON)
                                 {
-                                    response = await httpClient.PostAsJsonAsync<TPayload>(newUri, payload);
+                                    //response = await httpClient.PostAsJsonAsync<TPayload>(newUri, payload);
+                                    response = await httpClient.PostAsync(newUri, new JsonContent(payload));
                                 }
                                 else if (selector == SerializationSelector.PBUF)
                                 {
@@ -166,16 +169,16 @@ namespace System.Net.Http
                             default:
                                 throw new ArgumentException("Unsupported HTTP Verb submitted for HTTP message in HTTPClientExtension");
                         }
+
+                        TReturn value;
+                        return value = (selector == SerializationSelector.JSON) ? await ReturnJsonResult<TReturn>(response) : await ReturnPBufResult<TReturn>(response);
+
                     }
                     catch (Exception e)
                     {
                         var x = e;
                         throw;
                     }
-
-                    TReturn value;
-                    return value = (selector == SerializationSelector.JSON) ? await ReturnJsonResult<TReturn>(response) : await ReturnPBufResult<TReturn>(response);
-
                 }, ct);
         }
 
