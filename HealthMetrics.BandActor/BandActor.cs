@@ -14,7 +14,6 @@ namespace HealthMetrics.BandActor
     using System.Threading.Tasks;
     using HealthMetrics.BandActor.Interfaces;
     using HealthMetrics.Common;
-    using HealthMetrics.DoctorActor.Interfaces;
     using Microsoft.ServiceFabric.Actors;
     using Microsoft.ServiceFabric.Actors.Client;
     using Microsoft.ServiceFabric.Actors.Runtime;
@@ -81,7 +80,7 @@ namespace HealthMetrics.BandActor
             await this.StateManager.SetStateAsync<HealthIndex>("HealthIndex", info.HealthIndex);
             await this.StateManager.SetStateAsync<string>("PatientName", info.PersonName);
             await this.StateManager.SetStateAsync<List<HeartRateRecord>>("HeartRateRecords", new List<HeartRateRecord>());
-            await this.RegisterReminders();
+            await this.RegisterRegistrationReminder();
 
             ActorEventSource.Current.ActorMessage(this, "Band created. ID: {0}, Name: {1}, Doctor ID: {2}", this.Id, info.PersonName, info.DoctorId);
         }
@@ -90,6 +89,10 @@ namespace HealthMetrics.BandActor
         {
             switch (reminderName)
             {
+                case RegisterPatientReminder:
+                    await this.RegisterPatientReminder();
+                    break;
+
                 case GenerateAndSendHealthReportReminder:
                     await this.GenerateAndSendHealthReportAsync();
                     break;
@@ -100,6 +103,11 @@ namespace HealthMetrics.BandActor
             }
 
             return;
+        }
+
+        private Task RegisterPatientReminder()
+        {
+            
         }
 
         protected override Task OnActivateAsync()
@@ -119,25 +127,25 @@ namespace HealthMetrics.BandActor
             try
             {
                 ConditionalValue<HealthIndex> HeatlthInfoResult = await this.StateManager.TryGetStateAsync<HealthIndex>("HealthIndex");
-                ConditionalValue<string> PatientInfoResult = await this.StateManager.TryGetStateAsync<string>("PatientName");
-                ConditionalValue<Guid> DoctorInfoResult = await this.StateManager.TryGetStateAsync<Guid>("DoctorId");
+                ConditionalValue<string> PatientNameResult = await this.StateManager.TryGetStateAsync<string>("PatientName");
+                ConditionalValue<Guid> DoctorIdResult = await this.StateManager.TryGetStateAsync<Guid>("DoctorId");
 
-                if (HeatlthInfoResult.HasValue && PatientInfoResult.HasValue && DoctorInfoResult.HasValue)
+                if (HeatlthInfoResult.HasValue && PatientNameResult.HasValue && DoctorIdResult.HasValue)
                 {
-                    ActorId doctorId = new ActorId(DoctorInfoResult.Value);
+                    ActorId doctorId = new ActorId(DoctorIdResult.Value);
                     HeartRateRecord record = new HeartRateRecord((float) this.random.NextDouble());
 
                     await this.SaveHealthDataAsync(record);
 
-                    IDoctorActor doctor = ActorProxy.Create<IDoctorActor>(doctorId, this.doctorActorServiceUri);
+                    //IDoctorActor doctor = ActorProxy.Create<IDoctorActor>(doctorId, this.doctorActorServiceUri);
 
-                    await
-                        doctor.ReportHealthAsync(
-                            this.Id.GetGuidId(),
-                            PatientInfoResult.Value,
-                            HeatlthInfoResult.Value);
+                    //await
+                    //    doctor.ReportHealthAsync(
+                    //        this.Id.GetGuidId(),
+                    //        PatientNameResult.Value,
+                    //        HeatlthInfoResult.Value);
 
-                    ActorEventSource.Current.Message("Health info sent from band {0} to doctor {1}", this.Id, DoctorInfoResult.Value);
+                    ActorEventSource.Current.Message("Health info sent from band {0} to doctor {1}", this.Id, DoctorIdResult.Value);
                 }
             }
             catch (Exception e)
@@ -154,7 +162,7 @@ namespace HealthMetrics.BandActor
         {
             KeyedCollection<string, ConfigurationProperty> parameters = configSettings.Sections["HealthMetrics.BandActor.Settings"].Parameters;
 
-            this.doctorActorServiceUri = new ServiceUriBuilder(parameters["DoctorActorServiceInstanceName"].Value).ToUri();
+            this.doctorActorServiceUri = new ServiceUriBuilder(parameters["DoctorServiceInstanceName"].Value).ToUri();
         }
 
         private void CodePackageActivationContext_ConfigurationPackageModifiedEvent(object sender, PackageModifiedEventArgs<ConfigurationPackage> e)
@@ -177,9 +185,14 @@ namespace HealthMetrics.BandActor
             return;
         }
 
-        private async Task RegisterReminders()
+        private async Task RegisterHealthReportReminder()
         {
-            await this.RegisterReminderAsync(GenerateAndSendHealthReportReminder, null, TimeSpan.FromSeconds(this.random.Next(5, 30)), TimeSpan.FromSeconds(1));
+            await this.RegisterReminderAsync(GenerateAndSendHealthReportReminder, null, TimeSpan.FromSeconds(this.random.Next(5, 10)), TimeSpan.FromSeconds(1));
+        }
+
+        private async Task RegisterRegistrationReminder()
+        {
+            await this.RegisterReminderAsync(RegisterPatientReminder, null, TimeSpan.FromSeconds(this.random.Next(5, 30)), TimeSpan.FromSeconds(1));
         }
     }
 }

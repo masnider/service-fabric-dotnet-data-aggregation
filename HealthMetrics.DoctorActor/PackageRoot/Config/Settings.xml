@@ -8,7 +8,7 @@
     <Parameter Name="CredentialType" Value="None" />
   </Section>
   <Section Name="HealthMetrics.DoctorActor.Settings">
-    <Parameter Name="CountyServiceInstanceName" Value="HealthMetrics.CountyService" />
+    <Parameter Name="CountyServiceInstanceName" Value="" MustOverride="true" />
     <Parameter Name="BandActorServiceInstanceName" Value="HealthMetrics.BandActorService" />
   </Section>
   <Section Name="HealthIndexCalculator.Settings">

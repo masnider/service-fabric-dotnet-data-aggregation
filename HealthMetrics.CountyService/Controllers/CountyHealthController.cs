@@ -12,7 +12,6 @@ namespace HealthMetrics.CountyService
     using System.Threading.Tasks;
     using System.Web.Http;
     using HealthMetrics.Common;
-    using HealthMetrics.DoctorActor.Interfaces;
     using Microsoft.ServiceFabric.Data;
     using Microsoft.ServiceFabric.Data.Collections;
     using System.Net.Http;

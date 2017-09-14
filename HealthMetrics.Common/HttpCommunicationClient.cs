@@ -18,6 +18,14 @@ namespace HealthMetrics.Common
         public HttpCommunicationClient(Uri baseAddress, string listenerName, TimeSpan operationTimeout, TimeSpan readWriteTimeout)
         {
             this.BaseAddress = baseAddress;
+
+            var str = this.BaseAddress.ToString();
+
+            if (!str.EndsWith("/"))
+            {
+                this.BaseAddress = new Uri(str + "/");
+            }
+
             this.ListenerName = listenerName;
             this.OperationTimeout = operationTimeout;
             this.ReadWriteTimeout = readWriteTimeout;

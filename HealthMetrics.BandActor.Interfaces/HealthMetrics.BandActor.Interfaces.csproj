@@ -91,7 +91,6 @@
   <ItemGroup>
     <Compile Include="BandDataViewModel.cs" />
     <Compile Include="BandInfo.cs" />
-    <Compile Include="HeartRateRecord.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="IBandActor.cs" />
   </ItemGroup>

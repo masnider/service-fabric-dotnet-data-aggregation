@@ -8,21 +8,21 @@ namespace HealthMetrics.Common
     using ProtoBuf;
     using System.Runtime.Serialization;
 
-    [DataContract]
+    //[DataContract]
     [ProtoContract]
     public struct CountyRecord
     {
-        [DataMember]
+        //[DataMember]
         [ProtoMember(1)]
-        public string CountyName { get; set; }
+        public string CountyName { get; private set; }
 
-        [DataMember]
+        //[DataMember]
         [ProtoMember(2)]
-        public int CountyId { get; set; }
+        public int CountyId { get; private set; }
 
-        [DataMember]
+        //[DataMember]
         [ProtoMember(3)]
-        public double CountyHealth { get; set; }
+        public double CountyHealth { get; private set; }
 
         public CountyRecord(string name, int id, double countyHealth)
         {
@@ -62,7 +62,7 @@ namespace HealthMetrics.Common
 
         public override bool Equals(object obj)
         {
-            return (this == (CountyRecord) obj);
+            return (this == (CountyRecord)obj);
         }
 
         public override int GetHashCode()

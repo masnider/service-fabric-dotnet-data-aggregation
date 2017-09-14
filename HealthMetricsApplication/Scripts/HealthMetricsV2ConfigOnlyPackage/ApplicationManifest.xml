@@ -4,7 +4,6 @@
     <Parameter Name="ScoreCalculationMode" DefaultValue="Mode1" />
     <Parameter Name="CreationServiceParallelThreads" DefaultValue="4" />
     <Parameter Name="MaxBandsToCreatePerServiceInstance" DefaultValue="6000" />
-    <Parameter Name="GenerateKnownPeople" DefaultValue="false" />
     <Parameter Name="KnownPatientId" DefaultValue="0e83c959-657d-ea06-0e2d-13f749d62229" />
     <Parameter Name="KnownDoctorId" DefaultValue="342827c7-bd78-d825-f312-2eae41f8ea45" />
   </Parameters>
@@ -28,6 +27,9 @@
           <Section Name="HealthIndexCalculator.Settings">
             <Parameter Name="ScoreCalculationMode" Value="[ScoreCalculationMode]" />
           </Section>
+          <Section Name="HealthMetrics.BandActor.Settings">
+            <Parameter Name="DoctorServiceInstanceName" Value="[DoctorServiceInstanceName]" />
+          </Section>
         </Settings>
       </ConfigOverride>
     </ConfigOverrides>
@@ -38,7 +40,6 @@
       <ConfigOverride Name="Config">
         <Settings>
           <Section Name="HealthMetrics.WebService.Settings">
-            <Parameter Name="GenerateKnownPeople" Value="[GenerateKnownPeople]" />
             <Parameter Name="KnownPatientId" Value="[KnownPatientId]" />
             <Parameter Name="KnownDoctorId" Value="[KnownDoctorId]" />
           </Section>
@@ -69,7 +70,6 @@
           <Section Name="HealthMetrics.BandCreationService.Settings">
             <Parameter Name="NumberOfCreationThreads" Value="[CreationServiceParallelThreads]" />
             <Parameter Name="MaxBandsToCreatePerServiceInstance" Value="[MaxBandsToCreatePerServiceInstance]" />
-            <Parameter Name="GenerateKnownPeople" Value="[GenerateKnownPeople]" />
             <Parameter Name="KnownPatientId" Value="[KnownPatientId]" />
             <Parameter Name="KnownDoctorId" Value="[KnownDoctorId]" />
           </Section>

@@ -128,7 +128,7 @@ namespace HealthMetrics.CountyService
 
                         CountyStatsViewModel payload = new CountyStatsViewModel(totalDoctorCount, totalPatientCount, totalHealthReportCount, avgHealth);
 
-                        ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("NationalServiceName"));
+                        ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("NationalServiceInstanceName"));
 
                         await FabricHttpClient.MakePostRequest<string, CountyStatsViewModel>(
                             serviceUri.ToUri(),

@@ -8,7 +8,7 @@
     <Parameter Name="CredentialType" Value="None" />
   </Section>
   <Section Name="HealthMetrics.BandActor.Settings">
-    <Parameter Name="DoctorActorServiceInstanceName" Value="HealthMetrics.DoctorActorService" />
+    <Parameter Name="DoctorServiceInstanceName" Value="" MustOverride="true" />
   </Section>
   <Section Name="HealthIndexCalculator.Settings">
     <Parameter Name="ScoreCalculationMode" Value="" MustOverride="true" />

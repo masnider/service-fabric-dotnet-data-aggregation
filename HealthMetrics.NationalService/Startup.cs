@@ -11,6 +11,8 @@ namespace HealthMetrics.NationalService
     using Owin;
     using Web.Service;
     using WebApiContrib.Formatting;
+    using System.Net.Http.Formatting;
+    using System.Linq;
 
     /// <summary>
     /// OWIN configuration

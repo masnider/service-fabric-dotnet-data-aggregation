@@ -28,7 +28,7 @@
   <ItemGroup>
     <ProjectReference Include="..\HealthMetrics.BandActor\HealthMetrics.BandActor.csproj" />
     <ProjectReference Include="..\HealthMetrics.CountyService\HealthMetrics.CountyService.csproj" />
-    <ProjectReference Include="..\HealthMetrics.DoctorActor\HealthMetrics.DoctorActor.csproj" />
+    <ProjectReference Include="..\HealthMetrics.DoctorService\HealthMetrics.DoctorService.csproj" />
     <ProjectReference Include="..\HealthMetrics.NationalService\HealthMetrics.NationalService.csproj" />
     <ProjectReference Include="..\HealthMetrics.BandCreationService\HealthMetrics.BandCreationService.csproj" />
     <ProjectReference Include="..\HealthMetrics.WebService\HealthMetrics.WebService.csproj" />
@@ -38,8 +38,8 @@
     <Content Include="ApplicationPackageRoot\ApplicationManifest.xml" />
     <Content Include="ApplicationParameters\Local.1Node.xml" />
     <Content Include="ApplicationParameters\Local.5Node.xml" />
-    <Content Include="packages.config" />
     <Content Include="ApplicationParameters\Cloud.xml" />
+    <Content Include="packages.config" />
     <Content Include="PublishProfiles\Cloud.xml" />
     <Content Include="PublishProfiles\Local.1Node.xml" />
     <Content Include="PublishProfiles\Local.5Node.xml" />

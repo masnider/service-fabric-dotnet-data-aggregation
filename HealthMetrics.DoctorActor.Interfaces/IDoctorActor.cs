@@ -16,8 +16,6 @@ namespace HealthMetrics.DoctorActor.Interfaces
 
         Task NewAsync(string name, CountyRecord countyRecord);
 
-        //Task<DoctorDataViewModel> GetPatientsAsync();
-
         Task<Tuple<CountyRecord, string>> GetInfoAndNameAsync();
     }
 }

@@ -13,7 +13,6 @@ namespace HealthMetrics.WebService.Controllers
     using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
-    using HealthMetrics.BandActor.Interfaces;
     using HealthMetrics.Common;
     using Microsoft.ServiceFabric.Actors;
     using Microsoft.ServiceFabric.Actors.Client;
@@ -25,10 +24,13 @@ namespace HealthMetrics.WebService.Controllers
     using HealthMetrics.CountyService;
     using System.Net;
     using Microsoft.ServiceFabric.Services.Client;
+    using HealthMetrics.BandActor.Interfaces;
 
+    [Route("api")]
     public class DefaultApiController : Controller
     {
         private readonly KeyedCollection<string, ConfigurationProperty> configPackageSettings;
+
 
         public DefaultApiController()
         {
@@ -36,14 +38,14 @@ namespace HealthMetrics.WebService.Controllers
         }
 
         [HttpGet]
-        [Route("api/settings/{setting}")]
+        [Route("settings/{setting}")]
         public Task<string> GetSettingValue(string setting)
         {
             return Task.FromResult<string>(this.GetSetting(setting));
         }
 
         [HttpGet]
-        [Route("api/national/health")]
+        [Route("national/health")]
         public async Task<List<CountyHealth>> GetNationalHealth()
         {
             try
@@ -57,7 +59,7 @@ namespace HealthMetrics.WebService.Controllers
                     "/national/health",
                     CancellationToken.None
                     );
-                
+
                 return result;
             }
             catch (Exception e)
@@ -67,7 +69,7 @@ namespace HealthMetrics.WebService.Controllers
             }
         }
 
-        [Route("api/national/stats")]
+        [Route("national/stats")]
         public async Task<NationalStatsViewModel> GetNationalStats()
         {
             try
@@ -98,7 +100,7 @@ namespace HealthMetrics.WebService.Controllers
         /// <param name="countyId"></param>
         /// <returns></returns>
         [HttpGet]
-        [Route("api/county/{countyId}/doctors/")]
+        [Route("county/{countyId}/doctors/")]
         public async Task<IEnumerable<KeyValuePair<Guid, CountyDoctorStats>>> GetDoctors(int countyId)
         {
             try
@@ -117,13 +119,13 @@ namespace HealthMetrics.WebService.Controllers
             }
             catch (Exception e)
             {
-                ServiceEventSource.Current.Message("Exception in Web API Controller getting county {0} doctors: {1}", countyId,  e);
+                ServiceEventSource.Current.Message("Exception in Web API Controller getting county {0} doctors: {1}", countyId, e);
                 throw;
             }
         }
 
         [HttpGet]
-        [Route("api/county/{countyId}/health/")]
+        [Route("county/{countyId}/health/")]
         public async Task<HealthIndex> GetCountyHealth(int countyId)
         {
 
@@ -160,7 +162,7 @@ namespace HealthMetrics.WebService.Controllers
         /// <param name="bandId"></param>
         /// <returns></returns>
         [HttpGet]
-        [Route("api/patients/{bandId}")]
+        [Route("patients/{bandId}")]
         public async Task<BandDataViewModel> GetPatientData(Guid bandId)
         {
             try
@@ -180,20 +182,10 @@ namespace HealthMetrics.WebService.Controllers
         }
 
         [HttpGet]
-        [Route("api/GetIds")]
+        [Route("GetIds")]
         public async Task<KeyValuePair<string, string>> GetPatientId()
         {
-            if (bool.Parse(this.configPackageSettings["GenerateKnownPeople"].Value))
-            {
-                string patientId = this.configPackageSettings["KnownPatientId"].Value;
-                string doctorId = this.configPackageSettings["KnownDoctorId"].Value;
-
-                return new KeyValuePair<string, string>(patientId, doctorId);
-            }
-            else
-            {
-                return await this.GetRandomIdsAsync();
-            }
+            return await this.GetRandomIdsAsync();
         }
 
         private string GetSetting(string key)
@@ -205,7 +197,7 @@ namespace HealthMetrics.WebService.Controllers
         {
             ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("BandActorServiceInstanceName"));
             Uri fabricServiceName = serviceUri.ToUri();
-            
+
             CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
             CancellationToken token = cts.Token;
             FabricClient fc = new FabricClient();
@@ -230,7 +222,7 @@ namespace HealthMetrics.WebService.Controllers
 
                             ActorId bandActorId = info.ActorId;
                             IBandActor bandActor = ActorProxy.Create<IBandActor>(bandActorId, fabricServiceName);
-                            
+
                             try
                             {
                                 BandDataViewModel data = await bandActor.GetBandDataAsync();

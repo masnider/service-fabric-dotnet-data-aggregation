@@ -3,7 +3,7 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-namespace HealthMetrics.BandActor.Interfaces
+namespace HealthMetrics.Common
 {
     using ProtoBuf;
     using System;

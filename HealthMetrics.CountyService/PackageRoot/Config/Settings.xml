@@ -2,7 +2,7 @@
 <Settings xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://schemas.microsoft.com/2011/01/fabric">
   <Section Name="HealthMetrics.CountyService.Settings">
     <Parameter Name="UpdateFrequency" Value="5" />
-    <Parameter Name="NationalServiceName" Value="HealthMetrics.NationalService" />
+    <Parameter Name="NationalServiceInstanceName" Value="" MustOverride="true" />
   </Section>
   <Section Name="HealthIndexCalculator.Settings">
     <Parameter Name="ScoreCalculationMode" Value="" MustOverride="true"/>

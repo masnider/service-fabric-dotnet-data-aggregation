@@ -7,13 +7,12 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Owin.StaticFiles;
+using AspNetCoreProtobuf.Formatters;
 using Microsoft.AspNetCore.ResponseCompression;
 using System.IO.Compression;
 using System.Net.Http.Headers;
-using AspNetCoreProtobuf.Formatters;
 
-namespace HealthMetrics.WebService
+namespace HealthMetrics.DoctorService
 {
     public class Startup
     {
@@ -24,7 +23,6 @@ namespace HealthMetrics.WebService
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true)
                 .AddEnvironmentVariables();
-            
             Configuration = builder.Build();
         }
 
@@ -50,7 +48,6 @@ namespace HealthMetrics.WebService
             {
                 options.Level = CompressionLevel.Optimal;
             });
-            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -59,7 +56,6 @@ namespace HealthMetrics.WebService
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
             app.UseResponseCompression();
-            app.UseStaticFiles();
             app.UseMvc();
         }
     }

@@ -13,10 +13,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthMetrics.Common", "Hea
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthMetrics.BandCreationService", "HealthMetrics.BandCreationService\HealthMetrics.BandCreationService.csproj", "{ECE13121-9B78-4F90-8529-CE7DC9279C42}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthMetrics.DoctorActor", "HealthMetrics.DoctorActor\HealthMetrics.DoctorActor.csproj", "{EEAD2EF9-3CD3-4C3B-93FE-09E309B1114D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthMetrics.DoctorActor.Interfaces", "HealthMetrics.DoctorActor.Interfaces\HealthMetrics.DoctorActor.Interfaces.csproj", "{F945DAFD-5424-49CA-95F1-360970EA9E31}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthMetrics.BandActor", "HealthMetrics.BandActor\HealthMetrics.BandActor.csproj", "{B8B9A1E2-C158-4B6C-8FD2-86EAABE177BC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HealthMetrics.BandActor.Interfaces", "HealthMetrics.BandActor.Interfaces\HealthMetrics.BandActor.Interfaces.csproj", "{60FFAF07-B6D6-4F68-B7A4-156D72CCD05A}"
@@ -27,6 +23,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HealthMetrics.WebService", "HealthMetrics.WebService\HealthMetrics.WebService.csproj", "{B773043D-138B-419F-9080-EC82F5ED7EE5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HealthMetrics.DoctorService", "HealthMetrics.DoctorService\HealthMetrics.DoctorService.csproj", "{6CC9CB0A-85BB-4F8E-A6E1-FBAFB7CA01C0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -68,18 +66,6 @@ Global
 		{ECE13121-9B78-4F90-8529-CE7DC9279C42}.Release|Any CPU.ActiveCfg = Release|x64
 		{ECE13121-9B78-4F90-8529-CE7DC9279C42}.Release|x64.ActiveCfg = Release|x64
 		{ECE13121-9B78-4F90-8529-CE7DC9279C42}.Release|x64.Build.0 = Release|x64
-		{EEAD2EF9-3CD3-4C3B-93FE-09E309B1114D}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{EEAD2EF9-3CD3-4C3B-93FE-09E309B1114D}.Debug|x64.ActiveCfg = Debug|x64
-		{EEAD2EF9-3CD3-4C3B-93FE-09E309B1114D}.Debug|x64.Build.0 = Debug|x64
-		{EEAD2EF9-3CD3-4C3B-93FE-09E309B1114D}.Release|Any CPU.ActiveCfg = Release|x64
-		{EEAD2EF9-3CD3-4C3B-93FE-09E309B1114D}.Release|x64.ActiveCfg = Release|x64
-		{EEAD2EF9-3CD3-4C3B-93FE-09E309B1114D}.Release|x64.Build.0 = Release|x64
-		{F945DAFD-5424-49CA-95F1-360970EA9E31}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{F945DAFD-5424-49CA-95F1-360970EA9E31}.Debug|x64.ActiveCfg = Debug|x64
-		{F945DAFD-5424-49CA-95F1-360970EA9E31}.Debug|x64.Build.0 = Debug|x64
-		{F945DAFD-5424-49CA-95F1-360970EA9E31}.Release|Any CPU.ActiveCfg = Release|x64
-		{F945DAFD-5424-49CA-95F1-360970EA9E31}.Release|x64.ActiveCfg = Release|x64
-		{F945DAFD-5424-49CA-95F1-360970EA9E31}.Release|x64.Build.0 = Release|x64
 		{B8B9A1E2-C158-4B6C-8FD2-86EAABE177BC}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{B8B9A1E2-C158-4B6C-8FD2-86EAABE177BC}.Debug|x64.ActiveCfg = Debug|x64
 		{B8B9A1E2-C158-4B6C-8FD2-86EAABE177BC}.Debug|x64.Build.0 = Debug|x64
@@ -100,6 +86,14 @@ Global
 		{B773043D-138B-419F-9080-EC82F5ED7EE5}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B773043D-138B-419F-9080-EC82F5ED7EE5}.Release|x64.ActiveCfg = Release|Any CPU
 		{B773043D-138B-419F-9080-EC82F5ED7EE5}.Release|x64.Build.0 = Release|Any CPU
+		{6CC9CB0A-85BB-4F8E-A6E1-FBAFB7CA01C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6CC9CB0A-85BB-4F8E-A6E1-FBAFB7CA01C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6CC9CB0A-85BB-4F8E-A6E1-FBAFB7CA01C0}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6CC9CB0A-85BB-4F8E-A6E1-FBAFB7CA01C0}.Debug|x64.Build.0 = Debug|Any CPU
+		{6CC9CB0A-85BB-4F8E-A6E1-FBAFB7CA01C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6CC9CB0A-85BB-4F8E-A6E1-FBAFB7CA01C0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6CC9CB0A-85BB-4F8E-A6E1-FBAFB7CA01C0}.Release|x64.ActiveCfg = Release|Any CPU
+		{6CC9CB0A-85BB-4F8E-A6E1-FBAFB7CA01C0}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
