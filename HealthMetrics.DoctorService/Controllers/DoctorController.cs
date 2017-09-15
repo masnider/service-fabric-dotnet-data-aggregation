@@ -15,7 +15,8 @@ namespace HealthMetrics.DoctorService.Controllers
         [Route("health/{personId}")]
         public async Task ReportPatientHealthAsync(Guid personId, [FromBody]HeartRateRecord latestHeartRateRecord)
         {
-
+            Console.WriteLine(personId);
+            return;
         }
 
         [HttpPost]
@@ -30,7 +31,8 @@ namespace HealthMetrics.DoctorService.Controllers
         [Route("new/patient/{doctorId}")]
         public async Task RegisterPatientAsync(Guid doctorId, [FromBody]PatientRegistrationRecord record)
         {
-
+            Console.WriteLine(doctorId);
+            return;
         }
     }
 }

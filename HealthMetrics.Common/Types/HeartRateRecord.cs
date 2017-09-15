@@ -19,7 +19,7 @@ namespace HealthMetrics.Common
 
         [DataMember]
         [ProtoMember(2)]
-        public DateTimeOffset Timestamp { get; private set; }
+        public DateTimeOffsetSurrogate Timestamp { get; private set; }
 
         public HeartRateRecord(float heartRate)
         {

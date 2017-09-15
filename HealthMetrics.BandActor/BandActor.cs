@@ -18,17 +18,24 @@ namespace HealthMetrics.BandActor
     using Microsoft.ServiceFabric.Actors.Client;
     using Microsoft.ServiceFabric.Actors.Runtime;
     using Microsoft.ServiceFabric.Data;
+    using System.Net.Http;
+    using HealthMetrics.DoctorService.Models;
+    using Microsoft.ServiceFabric.Services.Client;
+    using System.Threading;
 
     //[StatePersistence(StatePersistence.Volatile)]
     internal class BandActor : Actor, IBandActor, IRemindable
     {
         private const string GenerateHealthDataAsyncReminder = "GenerateHealthDataAsync";
-        private const string GenerateAndSendHealthReportReminder = "SendHealthReportAsync";
+        private const string GenerateAndSendHealthReportReminderName = "SendHealthReportAsync";
+        private const string RegisterPatientReminderName = "RegisterPatientReminder";
         private readonly TimeSpan TimeWindow = TimeSpan.FromMinutes(2);
 
-        private Uri doctorActorServiceUri;
+        private Uri doctorServiceUri;
         private CryptoRandom random = new CryptoRandom();
         private HealthIndexCalculator indexCalculator;
+        private IActorReminder registrationReminder = null;
+        private ServicePartitionKey doctorServicePartitionKey = null; //TODO repopulate these on recovery during onactivateasync if there is state
 
         public BandActor(ActorService actorService, ActorId actorId)
             : base(actorService, actorId)
@@ -80,6 +87,7 @@ namespace HealthMetrics.BandActor
             await this.StateManager.SetStateAsync<HealthIndex>("HealthIndex", info.HealthIndex);
             await this.StateManager.SetStateAsync<string>("PatientName", info.PersonName);
             await this.StateManager.SetStateAsync<List<HeartRateRecord>>("HeartRateRecords", new List<HeartRateRecord>());
+            this.doctorServicePartitionKey = new ServicePartitionKey(HashUtil.getLongHashCode(info.DoctorId.ToString()));
             await this.RegisterRegistrationReminder();
 
             ActorEventSource.Current.ActorMessage(this, "Band created. ID: {0}, Name: {1}, Doctor ID: {2}", this.Id, info.PersonName, info.DoctorId);
@@ -89,11 +97,14 @@ namespace HealthMetrics.BandActor
         {
             switch (reminderName)
             {
-                case RegisterPatientReminder:
+                case RegisterPatientReminderName:
                     await this.RegisterPatientReminder();
+                    await RegisterHealthReportReminder();
+                    await this.UnregisterReminderAsync(this.registrationReminder);
+                    this.registrationReminder = null;
                     break;
 
-                case GenerateAndSendHealthReportReminder:
+                case GenerateAndSendHealthReportReminderName:
                     await this.GenerateAndSendHealthReportAsync();
                     break;
 
@@ -105,9 +116,26 @@ namespace HealthMetrics.BandActor
             return;
         }
 
-        private Task RegisterPatientReminder()
+        private async Task RegisterPatientReminder()
         {
-            
+            ConditionalValue<Guid> DoctorIdResult = await this.StateManager.TryGetStateAsync<Guid>("DoctorId");
+            var docIdStr = DoctorIdResult.Value.ToString();
+
+            var prr = new PatientRegistrationRecord(
+                await this.StateManager.GetStateAsync<string>("PatientName"),
+                this.Id.GetGuidId(),
+                await this.StateManager.GetStateAsync<HealthIndex>("HealthIndex")
+                );
+
+            await FabricHttpClient.MakePostRequest<string, PatientRegistrationRecord>(
+                    this.doctorServiceUri,
+                    new ServicePartitionKey(HashUtil.getLongHashCode(docIdStr)),
+                    "ServiceEndpoint",
+                    "/doctor/new/patient/" + docIdStr,
+                    prr,
+                    SerializationSelector.PBUF,
+                    CancellationToken.None
+                    );
         }
 
         protected override Task OnActivateAsync()
@@ -126,27 +154,24 @@ namespace HealthMetrics.BandActor
         {
             try
             {
-                ConditionalValue<HealthIndex> HeatlthInfoResult = await this.StateManager.TryGetStateAsync<HealthIndex>("HealthIndex");
-                ConditionalValue<string> PatientNameResult = await this.StateManager.TryGetStateAsync<string>("PatientName");
-                ConditionalValue<Guid> DoctorIdResult = await this.StateManager.TryGetStateAsync<Guid>("DoctorId");
+                ConditionalValue<Guid> DoctorIdResult = await this.StateManager.TryGetStateAsync<Guid>("DoctorId"); 
+                string docIdStr = DoctorIdResult.Value.ToString();
+                HeartRateRecord record = new HeartRateRecord((float)this.random.NextDouble());
 
-                if (HeatlthInfoResult.HasValue && PatientNameResult.HasValue && DoctorIdResult.HasValue)
-                {
-                    ActorId doctorId = new ActorId(DoctorIdResult.Value);
-                    HeartRateRecord record = new HeartRateRecord((float) this.random.NextDouble());
+                await this.SaveHealthDataAsync(record);
 
-                    await this.SaveHealthDataAsync(record);
+                await FabricHttpClient.MakePostRequest<string, HeartRateRecord>(
+                    this.doctorServiceUri,
+                    this.doctorServicePartitionKey,
+                    "ServiceEndpoint",
+                    "doctor/health/" + this.Id.GetGuidId(),
+                    record,
+                    SerializationSelector.PBUF,
+                    CancellationToken.None
+                    );
+                
+                ActorEventSource.Current.Message("Health info sent from band {0} to doctor {1}", this.Id, DoctorIdResult.Value);
 
-                    //IDoctorActor doctor = ActorProxy.Create<IDoctorActor>(doctorId, this.doctorActorServiceUri);
-
-                    //await
-                    //    doctor.ReportHealthAsync(
-                    //        this.Id.GetGuidId(),
-                    //        PatientNameResult.Value,
-                    //        HeatlthInfoResult.Value);
-
-                    ActorEventSource.Current.Message("Health info sent from band {0} to doctor {1}", this.Id, DoctorIdResult.Value);
-                }
             }
             catch (Exception e)
             {
@@ -161,8 +186,7 @@ namespace HealthMetrics.BandActor
         private void UpdateConfigSettings(ConfigurationSettings configSettings)
         {
             KeyedCollection<string, ConfigurationProperty> parameters = configSettings.Sections["HealthMetrics.BandActor.Settings"].Parameters;
-
-            this.doctorActorServiceUri = new ServiceUriBuilder(parameters["DoctorServiceInstanceName"].Value).ToUri();
+            this.doctorServiceUri = new ServiceUriBuilder(parameters["DoctorServiceInstanceName"].Value).ToUri();
         }
 
         private void CodePackageActivationContext_ConfigurationPackageModifiedEvent(object sender, PackageModifiedEventArgs<ConfigurationPackage> e)
@@ -177,22 +201,21 @@ namespace HealthMetrics.BandActor
             if (HeartRateRecords.HasValue)
             {
                 List<HeartRateRecord> records = HeartRateRecords.Value;
-                records = records.Where(x => DateTimeOffset.UtcNow - x.Timestamp.ToUniversalTime() <= this.TimeWindow).ToList();
+                records = records.Where(x => DateTimeOffset.UtcNow - ((DateTimeOffset)x.Timestamp).ToUniversalTime() <= this.TimeWindow).ToList();
                 records.Add(newRecord);
                 await this.StateManager.SetStateAsync<List<HeartRateRecord>>("HeartRateRecords", records);
             }
-
             return;
         }
 
         private async Task RegisterHealthReportReminder()
         {
-            await this.RegisterReminderAsync(GenerateAndSendHealthReportReminder, null, TimeSpan.FromSeconds(this.random.Next(5, 10)), TimeSpan.FromSeconds(1));
+            await this.RegisterReminderAsync(GenerateAndSendHealthReportReminderName, null, TimeSpan.FromSeconds(this.random.Next(1, 30)), TimeSpan.FromSeconds(1));
         }
 
         private async Task RegisterRegistrationReminder()
         {
-            await this.RegisterReminderAsync(RegisterPatientReminder, null, TimeSpan.FromSeconds(this.random.Next(5, 30)), TimeSpan.FromSeconds(1));
+            this.registrationReminder = await this.RegisterReminderAsync(RegisterPatientReminderName, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
         }
     }
 }

@@ -273,28 +273,29 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CalculationMode.cs" />
-    <Compile Include="CryptoRandom.cs" />
-    <Compile Include="HashUtil.cs" />
+    <Compile Include="ServiceUtilities\CryptoRandom.cs" />
+    <Compile Include="ServiceUtilities\HashUtil.cs" />
+    <Compile Include="Types\DateTimeOffsetSurrogate.cs" />
     <Compile Include="Types\DoctorStatsViewModel.cs" />
     <Compile Include="Types\HealthIndex.cs" />
     <Compile Include="HealthIndexCalculator.cs" />
-    <Compile Include="JsonContent.cs" />
-    <Compile Include="ProtobufInputFormatter.cs" />
-    <Compile Include="ProtobufOutputFormatter.cs" />
-    <Compile Include="ProtoContent.cs" />
-    <Compile Include="SerializationSelector.cs" />
-    <Compile Include="HttpVerb.cs" />
+    <Compile Include="JsonStuff\JsonContent.cs" />
+    <Compile Include="ProtoStuff\ProtobufInputFormatter.cs" />
+    <Compile Include="ProtoStuff\ProtobufOutputFormatter.cs" />
+    <Compile Include="ProtoStuff\ProtoContent.cs" />
+    <Compile Include="HttpCommunicationUtilities\SerializationSelector.cs" />
+    <Compile Include="HttpCommunicationUtilities\HttpVerb.cs" />
     <Compile Include="Types\HeartRateRecord.cs" />
     <Compile Include="Types\NationalStatsViewModel.cs" />
-    <Compile Include="CountyStatsViewModel.cs" />
-    <Compile Include="HttpCommunicationClient.cs" />
-    <Compile Include="HttpCommunicationClientFactory.cs" />
+    <Compile Include="Types\CountyStatsViewModel.cs" />
+    <Compile Include="HttpCommunicationUtilities\HttpCommunicationClient.cs" />
+    <Compile Include="HttpCommunicationUtilities\HttpCommunicationClientFactory.cs" />
     <Compile Include="Types\CountyRecord.cs" />
-    <Compile Include="FabricHttpClient.cs" />
-    <Compile Include="IOwinAppBuilder.cs" />
-    <Compile Include="HttpCommunicationListener.cs" />
+    <Compile Include="HttpCommunicationUtilities\FabricHttpClient.cs" />
+    <Compile Include="HttpCommunicationUtilities\IOwinAppBuilder.cs" />
+    <Compile Include="HttpCommunicationUtilities\HttpCommunicationListener.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ServiceUriBuilder.cs" />
+    <Compile Include="HttpCommunicationUtilities\ServiceUriBuilder.cs" />
     <Compile Include="ServiceUtilities\ServiceConfigReader.cs" />
   </ItemGroup>
   <ItemGroup>
