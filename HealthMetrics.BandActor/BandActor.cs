@@ -23,7 +23,6 @@ namespace HealthMetrics.BandActor
     using Microsoft.ServiceFabric.Services.Client;
     using System.Threading;
 
-    //[StatePersistence(StatePersistence.Volatile)]
     internal class BandActor : Actor, IBandActor, IRemindable
     {
         private const string GenerateHealthDataAsyncReminder = "GenerateHealthDataAsync";
@@ -215,7 +214,7 @@ namespace HealthMetrics.BandActor
 
         private async Task RegisterRegistrationReminder()
         {
-            this.registrationReminder = await this.RegisterReminderAsync(RegisterPatientReminderName, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
+            this.registrationReminder = await this.RegisterReminderAsync(RegisterPatientReminderName, null, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1));
         }
     }
 }
