@@ -8,33 +8,37 @@ namespace HealthMetrics.Common
     using System.Runtime.Serialization;
     using HealthMetrics.Common;
     using ProtoBuf;
+    using System;
 
-    [DataContract]
     [ProtoContract]
     public struct DoctorStatsViewModel
     {
-        public DoctorStatsViewModel(int patientCount, long healthReportCount, HealthIndex averageHealthIndex, string doctorName)
+        public DoctorStatsViewModel(Guid doctorId, int countyId, int patientCount, long healthReportCount, HealthIndex averageHealthIndex, string doctorName)
         {
+            this.DoctorId = doctorId;
+            this.countyId = countyId;
             this.PatientCount = patientCount;
             this.HealthReportCount = healthReportCount;
             this.AverageHealthIndex = averageHealthIndex;
             this.DoctorName = doctorName;
         }
 
-        [DataMember]
         [ProtoMember(1)]
+        public Guid DoctorId { get; private set; }
+        
+        [ProtoMember(2)]
+        public int countyId { get; private set; }
+
+        [ProtoMember(3)]
         public int PatientCount { get; private set; }
 
-        [DataMember]
-        [ProtoMember(2)]
+        [ProtoMember(4)]
         public long HealthReportCount { get; private set; }
 
-        [DataMember]
-        [ProtoMember(3)]
+        [ProtoMember(5)]
         public HealthIndex AverageHealthIndex { get; private set; }
 
-        [DataMember]
-        [ProtoMember(4)]
+        [ProtoMember(6)]
         public string DoctorName { get; private set; }
     }
 }

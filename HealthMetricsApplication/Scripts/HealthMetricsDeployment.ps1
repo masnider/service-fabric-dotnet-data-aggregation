@@ -13,7 +13,7 @@ $constrainedNodeTypes = $false
 
 if($cloud)
 {
-    $cloudAddress = "xrg3.trafficmanager.net"
+    $cloudAddress = "xrg8.trafficmanager.net"
 }
 
 if($certSecure)
@@ -47,6 +47,8 @@ if($cloud)
     $countyServicePartitionCount = @{$true=1;$false=30}[$singleNode -eq $true]
     $bandActorServicePartitionCount = @{$true=1;$false=30}[$singleNode -eq $true]
     $doctorActorServicePartitionCount = @{$true=1;$false=30}[$singleNode -eq $true]
+    $targetReplicaCount = 3
+    $minReplicaCount = 3
     $imageStoreConnectionString = "fabric:ImageStore"
 }
 else
@@ -86,22 +88,22 @@ $webServiceName = "HealthMetrics.WebService"
 
 $nationalServiceType = "HealthMetrics.NationalServiceType"
 $nationalServiceName = "HealthMetrics.NationalService"
-$nationalServiceReplicaCount = @{$true=1;$false=3}[$singleNode -eq $true]  
+$nationalServiceReplicaCount = @{$true=1;$false=$targetReplicaCount}[$singleNode -eq $true]  
 
 $countyServiceType = "HealthMetrics.CountyServiceType"
 $countyServiceName = "HealthMetrics.CountyService"
-$countyServiceReplicaCount = @{$true=1;$false=3}[$singleNode -eq $true]  
+$countyServiceReplicaCount = @{$true=1;$false=$targetReplicaCount}[$singleNode -eq $true]  
 
 $bandCreationServiceType = "HealthMetrics.BandCreationServiceType"
 $bandCreationServiceName = "HealthMetrics.BandCreationService"
 
 $doctorActorServiceType = "DoctorActorServiceType"
 $doctorActorServiceName = "HealthMetrics.DoctorActorService"
-$doctorServiceReplicaCount = @{$true=1;$false=3}[$singleNode -eq $true]
+$doctorServiceReplicaCount = @{$true=1;$false=$targetReplicaCount}[$singleNode -eq $true]
 
 $bandActorServiceType = "BandActorServiceType"
 $bandActorServiceName= "HealthMetrics.BandActorService"
-$bandActorReplicaCount = @{$true=1;$false=3}[$singleNode -eq $true]
+$bandActorReplicaCount = @{$true=1;$false=$targetReplicaCount}[$singleNode -eq $true]
 
 $parameters = @{}
 $parameters.Add("MaxBandsToCreatePerServiceInstance", $bandsPerService)

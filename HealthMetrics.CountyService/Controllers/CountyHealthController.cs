@@ -75,8 +75,8 @@ namespace HealthMetrics.CountyService
         /// </summary>
         /// <returns></returns>
         [HttpPost]
-        [Route("county/health/{countyId}/{doctorId}")]
-        public async Task Post([FromUri] int countyId, [FromUri] Guid doctorId, [FromBody] DoctorStatsViewModel stats)
+        [Route("county/health")]
+        public async Task Post([FromBody] IList<DoctorStatsViewModel> stats)
         {
 
             try
@@ -84,31 +84,34 @@ namespace HealthMetrics.CountyService
                 IReliableDictionary<int, string> countyNameDictionary =
                     await this.stateManager.GetOrAddAsync<IReliableDictionary<int, string>>(Service.CountyNameDictionaryName);
 
-                IReliableDictionary<Guid, CountyDoctorStats> countyHealth =
-                    await
-                        this.stateManager.GetOrAddAsync<IReliableDictionary<Guid, CountyDoctorStats>>(
-                            string.Format(Service.CountyHealthDictionaryName, countyId));
 
-                using (ITransaction tx = this.stateManager.CreateTransaction())
+                foreach (var stat in stats)
                 {
-                    await
-                        countyHealth.SetAsync(
-                            tx,
-                            doctorId,
-                            new CountyDoctorStats(stats.PatientCount, stats.HealthReportCount, stats.DoctorName, stats.AverageHealthIndex));
+                    IReliableDictionary<Guid, CountyDoctorStats> countyHealth =
+                        await
+                            this.stateManager.GetOrAddAsync<IReliableDictionary<Guid, CountyDoctorStats>>(
+                                string.Format(Service.CountyHealthDictionaryName, stat.DoctorId));
 
-                    // Add the county only if it does not already exist.
-                    ConditionalValue<string> getResult = await countyNameDictionary.TryGetValueAsync(tx, countyId);
-
-                    if (!getResult.HasValue)
+                    using (ITransaction tx = this.stateManager.CreateTransaction())
                     {
-                        await countyNameDictionary.AddAsync(tx, countyId, String.Empty);
+                        await
+                            countyHealth.SetAsync(
+                                tx,
+                                stat.DoctorId,
+                                new CountyDoctorStats(stat.PatientCount, stat.HealthReportCount, stat.DoctorName, stat.AverageHealthIndex));
+
+                        // Add the county only if it does not already exist.
+                        ConditionalValue<string> getResult = await countyNameDictionary.TryGetValueAsync(tx, stat.countyId);
+
+                        if (!getResult.HasValue)
+                        {
+                            await countyNameDictionary.AddAsync(tx, stat.countyId, String.Empty);
+                        }
+
+                        // finally, commit the transaction and return a result
+                        await tx.CommitAsync();
                     }
-
-                    // finally, commit the transaction and return a result
-                    await tx.CommitAsync();
                 }
-
                 return;
             }
             catch (Exception e)

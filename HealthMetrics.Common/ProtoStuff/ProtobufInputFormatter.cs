@@ -25,8 +25,6 @@ namespace AspNetCoreProtobuf.Formatters
             var request = context.HttpContext.Request;
             MediaTypeHeaderValue requestContentType = null;
             MediaTypeHeaderValue.TryParse(request.ContentType, out requestContentType);
-
-
             object result = Model.Deserialize(context.HttpContext.Request.Body, null, type);
             return InputFormatterResult.SuccessAsync(result);
         }

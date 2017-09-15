@@ -34,7 +34,7 @@ namespace HealthMetrics.BandActor
         private CryptoRandom random = new CryptoRandom();
         private HealthIndexCalculator indexCalculator;
         private IActorReminder registrationReminder = null;
-        private ServicePartitionKey doctorServicePartitionKey = null; //TODO repopulate these on recovery during onactivateasync if there is state
+        private ServicePartitionKey doctorServicePartitionKey = null; 
 
         public BandActor(ActorService actorService, ActorId actorId)
             : base(actorService, actorId)
@@ -163,7 +163,7 @@ namespace HealthMetrics.BandActor
                     this.doctorServiceUri,
                     this.doctorServicePartitionKey,
                     "ServiceEndpoint",
-                    "doctor/health/" + this.Id.GetGuidId(),
+                    "doctor/health/" + docIdStr + "/" + this.Id.GetGuidId(),
                     record,
                     SerializationSelector.PBUF,
                     CancellationToken.None
