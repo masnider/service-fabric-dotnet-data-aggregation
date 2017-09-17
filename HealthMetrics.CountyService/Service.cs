@@ -100,9 +100,7 @@ namespace HealthMetrics.CountyService
 
                         using (ITransaction tx = this.StateManager.CreateTransaction())
                         {
-                            IAsyncEnumerable<KeyValuePair<Guid, CountyDoctorStats>> healthRecords = await countyHealth.CreateEnumerableAsync(tx, EnumerationMode.Unordered);
-
-                            IAsyncEnumerator<KeyValuePair<Guid, CountyDoctorStats>> enumerator = healthRecords.GetAsyncEnumerator();
+                            IAsyncEnumerator<KeyValuePair<Guid, CountyDoctorStats>> enumerator = (await countyHealth.CreateEnumerableAsync(tx, EnumerationMode.Unordered)).GetAsyncEnumerator();
 
                             while (await enumerator.MoveNextAsync(cancellationToken))
                             {
@@ -111,20 +109,30 @@ namespace HealthMetrics.CountyService
 
                             await tx.CommitAsync();
                         }
-                            
+
                         foreach (KeyValuePair<Guid, CountyDoctorStats> item in records)
-                        {   
+                        {
                             //expandedAverage = priorAvg * totalDoctorCount;
                             //newTotal = expandedAverage + item.Value.AverageHealthIndex.GetValue();
 
                             totalDoctorCount++;
                             totalPatientCount += item.Value.PatientCount;
                             totalHealthReportCount += item.Value.HealthReportCount;
-                            
+
                             //priorAvg = newTotal / totalHealthReportCount;
                         }
 
-                        HealthIndex avgHealth = this.indexCalculator.ComputeAverageIndex(records.Select(x => x.Value.AverageHealthIndex));
+                        HealthIndex avgHealth;
+
+                        if (records.Count > 0)
+                        {
+                            avgHealth  = this.indexCalculator.ComputeAverageIndex(records.Select(x => x.Value.AverageHealthIndex));
+                        }
+                        else
+                        {
+                            avgHealth = this.indexCalculator.ComputeIndex(-1);
+                        }
+
 
                         CountyStatsViewModel payload = new CountyStatsViewModel(totalDoctorCount, totalPatientCount, totalHealthReportCount, avgHealth);
 
@@ -150,9 +158,12 @@ namespace HealthMetrics.CountyService
                         "CountyService encountered an exception trying to send data to National Service: TimeoutException in RunAsync: {0}",
                         te.ToString());
                 }
-                catch (FabricNotReadableException)
+                catch (FabricNotReadableException fnre)
                 {
-                    // transient error. Retry.
+                    ServiceEventSource.Current.ServiceMessage(
+                        this,
+                        "CountyService encountered an exception trying to send data to National Service: TimeoutException in RunAsync: {0}",
+                        fnre.ToString());// transient error. Retry.
                 }
                 catch (FabricTransientException fte)
                 {

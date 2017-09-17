@@ -76,14 +76,12 @@ namespace HealthMetrics.CountyService
         /// <returns></returns>
         [HttpPost]
         [Route("county/health")]
-        public async Task Post([FromBody] IList<DoctorStatsViewModel> stats)
+        public async Task Post([FromBody] List<DoctorStatsViewModel> stats)
         {
-
             try
             {                
                 IReliableDictionary<int, string> countyNameDictionary =
                     await this.stateManager.GetOrAddAsync<IReliableDictionary<int, string>>(Service.CountyNameDictionaryName);
-
 
                 foreach (var stat in stats)
                 {
@@ -98,7 +96,7 @@ namespace HealthMetrics.CountyService
                             countyHealth.SetAsync(
                                 tx,
                                 stat.DoctorId,
-                                new CountyDoctorStats(stat.PatientCount, stat.HealthReportCount, stat.DoctorName, stat.AverageHealthIndex));
+                                new CountyDoctorStats(stat.PatientCount, stat.HealthReportCount, stat.AverageHealthIndex));
 
                         // Add the county only if it does not already exist.
                         ConditionalValue<string> getResult = await countyNameDictionary.TryGetValueAsync(tx, stat.countyId);

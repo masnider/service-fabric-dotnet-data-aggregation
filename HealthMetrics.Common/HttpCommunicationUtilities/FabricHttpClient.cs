@@ -162,7 +162,15 @@ namespace System.Net.Http
                                 }
                                 else if (selector == SerializationSelector.PBUF)
                                 {
-                                    response = await httpClient.PostAsync(newUri, new ProtoContent(payload));
+                                    try
+                                    {
+                                        response = await httpClient.PostAsync(newUri, new ProtoContent(payload));
+                                    }
+                                    catch(Exception e)
+                                    {
+                                        Console.WriteLine(e);
+                                        throw;
+                                    }
                                 }
                                 break;
 

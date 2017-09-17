@@ -30,7 +30,7 @@ namespace HealthMetrics.WebService.Controllers
     public class DefaultApiController : Controller
     {
         private readonly KeyedCollection<string, ConfigurationProperty> configPackageSettings;
-
+        private readonly string BandServiceName = "BandActorServiceName";
 
         public DefaultApiController()
         {
@@ -69,6 +69,7 @@ namespace HealthMetrics.WebService.Controllers
             }
         }
 
+        [HttpGet]
         [Route("national/stats")]
         public async Task<NationalStatsViewModel> GetNationalStats()
         {
@@ -168,7 +169,7 @@ namespace HealthMetrics.WebService.Controllers
             try
             {
                 ActorId bandActorId = new ActorId(bandId);
-                ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("BandActorServiceInstanceName"));
+                ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting(BandServiceName));
 
                 IBandActor actor = ActorProxy.Create<IBandActor>(bandActorId, serviceUri.ToUri());
 
@@ -195,7 +196,7 @@ namespace HealthMetrics.WebService.Controllers
 
         private async Task<KeyValuePair<string, string>> GetRandomIdsAsync()
         {
-            ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting("BandActorServiceInstanceName"));
+            ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting(BandServiceName));
             Uri fabricServiceName = serviceUri.ToUri();
 
             CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));

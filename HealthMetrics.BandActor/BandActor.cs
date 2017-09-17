@@ -209,7 +209,7 @@ namespace HealthMetrics.BandActor
 
         private async Task RegisterHealthReportReminder()
         {
-            await this.RegisterReminderAsync(GenerateAndSendHealthReportReminderName, null, TimeSpan.FromSeconds(this.random.Next(1, 30)), TimeSpan.FromSeconds(1));
+            await this.RegisterReminderAsync(GenerateAndSendHealthReportReminderName, null, TimeSpan.FromSeconds(this.random.Next(1, 30)), TimeSpan.FromSeconds(5));
         }
 
         private async Task RegisterRegistrationReminder()

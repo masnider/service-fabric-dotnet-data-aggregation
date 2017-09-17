@@ -32,10 +32,13 @@ namespace HealthMetrics.DoctorService.Controllers
             var doctorMetadataDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, long>>(String.Format(DoctorMetadataDictionaryName, doctorId));
             var metadataDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, long>>(MetadataDictionaryName);
 
+            long totalReports = -1;
+            long doctorReports= -1;
+
             using (ITransaction tx = this.StateManager.CreateTransaction())
             {
-                await metadataDictionary.AddOrUpdateAsync(tx, "HealthReportCount", 1, (key, value) => value + 1);
-                await doctorMetadataDictionary.AddOrUpdateAsync(tx, "HealthReportCount", 1, (key, value) => value + 1);
+                totalReports = await metadataDictionary.AddOrUpdateAsync(tx, "HealthReportCount", 1, (key, value) => value + 1);
+                doctorReports = await doctorMetadataDictionary.AddOrUpdateAsync(tx, "HealthReportCount", 1, (key, value) => value + 1);
                 await tx.CommitAsync();
             }
 
@@ -49,13 +52,22 @@ namespace HealthMetrics.DoctorService.Controllers
             var doctorDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, DoctorCreationRecord>>(DoctorRegistrationDictionaryName);
             var metadataDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, long>>(MetadataDictionaryName);
 
+            long totalDoctorCount = -1;
+
             using (ITransaction tx = this.StateManager.CreateTransaction())
             {
                 if (!((await doctorDictionary.TryGetValueAsync(tx, doctorId)).HasValue))
                 {
-                    await metadataDictionary.AddOrUpdateAsync(tx, "DoctorCount", 1, (key, value) => value + 1);
+                    //increase the total number of doctors
+                    totalDoctorCount = await metadataDictionary.AddOrUpdateAsync(tx, "DoctorCount", 1, (key, value) => value + 1);
+
+                    //create the dictionary which holds patients for this doctor
                     await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, PatientRegistrationRecord>>(tx, String.Format(DoctorPatientDictionaryName, doctorId));
+
+                    //create the dictionary which holds metadatafor this doctor
                     await this.StateManager.GetOrAddAsync<IReliableDictionary<string, long>>(tx, String.Format(DoctorMetadataDictionaryName, doctorId));
+
+                    //add this doctor to the list of doctors
                     await doctorDictionary.SetAsync(tx, doctorId, record);
                 }
 
@@ -72,13 +84,16 @@ namespace HealthMetrics.DoctorService.Controllers
             var doctorMetadataDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, long>>(String.Format(DoctorMetadataDictionaryName, doctorId));
             var metadataDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, long>>(MetadataDictionaryName);
 
+            long totalPatientCount = -1;
+            long doctorPatientCount = -1;
+
             using (ITransaction tx = this.StateManager.CreateTransaction())
             {
                 if (!(await doctorPatientDictionary.TryGetValueAsync(tx, record.PatientId)).HasValue)
                 {
-                    await metadataDictionary.AddOrUpdateAsync(tx, "PatientCount", 1, (key, value) => value + 1);
+                    totalPatientCount = await metadataDictionary.AddOrUpdateAsync(tx, "PatientCount", 1, (key, value) => value + 1);
                     await doctorPatientDictionary.SetAsync(tx, record.PatientId, record);
-                    await doctorMetadataDictionary.AddOrUpdateAsync(tx, "PatientCount", 1, (key, value) => value + 1);
+                    doctorPatientCount = await doctorMetadataDictionary.AddOrUpdateAsync(tx, "PatientCount", 1, (key, value) => value + 1);
                 }
 
                 await tx.CommitAsync();

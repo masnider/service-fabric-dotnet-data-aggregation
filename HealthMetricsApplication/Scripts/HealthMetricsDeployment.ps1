@@ -43,7 +43,7 @@ if($cloud)
     $clusterAddress = $cloudAddress+":19000"
     $webServiceInstanceCount = -1
     $bandCreationInstanceCount = -1
-    $bandsPerService = "3000"
+    $bandsPerService = "750"
     $countyServicePartitionCount = @{$true=1;$false=30}[$singleNode -eq $true]
     $bandActorServicePartitionCount = @{$true=1;$false=30}[$singleNode -eq $true]
     $doctorActorServicePartitionCount = @{$true=1;$false=30}[$singleNode -eq $true]
