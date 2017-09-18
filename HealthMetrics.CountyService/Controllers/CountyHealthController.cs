@@ -88,7 +88,7 @@ namespace HealthMetrics.CountyService
                     IReliableDictionary<Guid, CountyDoctorStats> countyHealth =
                         await
                             this.stateManager.GetOrAddAsync<IReliableDictionary<Guid, CountyDoctorStats>>(
-                                string.Format(Service.CountyHealthDictionaryName, stat.DoctorId));
+                                string.Format(Service.CountyHealthDictionaryName, stat.countyId));
 
                     using (ITransaction tx = this.stateManager.CreateTransaction())
                     {
@@ -96,7 +96,7 @@ namespace HealthMetrics.CountyService
                             countyHealth.SetAsync(
                                 tx,
                                 stat.DoctorId,
-                                new CountyDoctorStats(stat.PatientCount, stat.HealthReportCount, stat.AverageHealthIndex));
+                                new CountyDoctorStats(stat.PatientCount, stat.HealthReportCount, stat.DoctorName, stat.AverageHealthIndex));
 
                         // Add the county only if it does not already exist.
                         ConditionalValue<string> getResult = await countyNameDictionary.TryGetValueAsync(tx, stat.countyId);

@@ -7,7 +7,9 @@ namespace HealthMetrics.Common
 {
     using ProtoBuf;
     using System;
+    using System.Runtime.Serialization;
 
+    [DataContract]
     [ProtoContract]
     public struct NationalStatsViewModel
     {
@@ -20,18 +22,23 @@ namespace HealthMetrics.Common
             this.StartTimeOffset = creationDateTime;
         }
 
+        [DataMember]
         [ProtoMember(1)]
         public long DoctorCount { get; private set; }
 
+        [DataMember]
         [ProtoMember(2)]
         public long PatientCount { get; private set; }
 
+        [DataMember]
         [ProtoMember(3)]
         public long HealthReportCount { get; private set; }
 
+        [DataMember]
         [ProtoMember(4)]
         public long AverageHealthIndex { get; private set; }
 
+        [DataMember]
         [ProtoMember(5)]
         public DateTimeOffsetSurrogate StartTimeOffset { get; set; }
 

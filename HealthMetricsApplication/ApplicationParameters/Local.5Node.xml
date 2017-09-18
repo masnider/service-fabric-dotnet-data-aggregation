@@ -2,6 +2,5 @@
 <Application xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Name="fabric:/HealthMetrics" xmlns="http://schemas.microsoft.com/2011/01/fabric">
   <Parameters>
     <Parameter Name="MaxBandsToCreatePerServiceInstance" Value="300" />
-    <Parameter Name="BandActorService_PartitionCount" Value="1" />
   </Parameters>
 </Application>

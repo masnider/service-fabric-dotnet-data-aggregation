@@ -8,19 +8,19 @@ namespace HealthMetrics.Common
     using ProtoBuf;
     using System.Runtime.Serialization;
 
-    //[DataContract]
+    [DataContract]
     [ProtoContract]
     public struct CountyRecord
     {
-        //[DataMember]
+        [DataMember]
         [ProtoMember(1)]
         public string CountyName { get; private set; }
 
-        //[DataMember]
+        [DataMember]
         [ProtoMember(2)]
         public int CountyId { get; private set; }
 
-        //[DataMember]
+        [DataMember]
         [ProtoMember(3)]
         public double CountyHealth { get; private set; }
 

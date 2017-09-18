@@ -1,5 +1,5 @@
-﻿$cloud = $true
-$singleNode = $false
+﻿$cloud = $false
+$singleNode = $true
 $certSecure = $false
 $AADSecure = $false
 

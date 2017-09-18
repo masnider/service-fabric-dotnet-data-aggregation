@@ -1,6 +1,7 @@
 ﻿using Microsoft.ServiceFabric.Services.Runtime;
 using System;
 using System.Diagnostics;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,6 +16,11 @@ namespace HealthMetrics.WebService
         {
             try
             {
+
+                ServicePointManager.DefaultConnectionLimit = 1024;
+                ServicePointManager.SetTcpKeepAlive(true, 2000, 1000);
+                ServicePointManager.UseNagleAlgorithm = false;
+
                 // The ServiceManifest.XML file defines one or more service type names.
                 // Registering a service maps a service type name to a .NET type.
                 // When Service Fabric creates an instance of this service type,

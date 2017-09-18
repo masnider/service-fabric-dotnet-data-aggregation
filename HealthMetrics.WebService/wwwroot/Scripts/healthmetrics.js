@@ -132,17 +132,20 @@ function MetricsApp() {
 
             var bpTickCount = 1;
 
-            $.each(patientData.heartRateHistory, function (id, jObject) {
-                var tick = [];
-                tick.push(self.FormatDateTime(jObject.timestamp));
-                tick.push(jObject.heartRate);
-                bpTickCount++;
-                bptickpoints.push(tick);
-            });
+            if (patientData.heartRateHistory.length > 0) {
 
-            DrawLineGraph("heartRateTable", "Resting Heart Rate", "", "", [bptickpoints], 50, 220);
+                $.each(patientData.heartRateHistory, function (id, jObject) {
+                    var tick = [];
+                    tick.push(self.FormatDateTime(jObject.timestamp.dateTimeString));
+                    tick.push(jObject.heartRate);
+                    bpTickCount++;
+                    bptickpoints.push(tick);
+                });
 
-            $('#userStats .loadingMessage').hide();
+                DrawLineGraph("heartRateTable", "Resting Heart Rate", "", "", [bptickpoints], 50, 220);
+
+                $('#userStats .loadingMessage').hide();
+            }
 
             self.UpdateDoctorList(patientData.countyInfo.countyId);
         });

@@ -5,8 +5,8 @@
 #or the application parameters mechanism provided via the VS tooling. It is meant to serve as an example
 #of manual application and service creation and configuration. 
 
-$cloud = $true
-$singleNode = $false
+$cloud = $false
+$singleNode = $true
 $certSecure = $false
 $AADSecure = $false
 $constrainedNodeTypes = $false
@@ -46,7 +46,7 @@ if($cloud)
     $bandsPerService = "750"
     $countyServicePartitionCount = @{$true=1;$false=30}[$singleNode -eq $true]
     $bandActorServicePartitionCount = @{$true=1;$false=30}[$singleNode -eq $true]
-    $doctorActorServicePartitionCount = @{$true=1;$false=30}[$singleNode -eq $true]
+    $doctorServicePartitionCount = @{$true=1;$false=30}[$singleNode -eq $true]
     $targetReplicaCount = 3
     $minReplicaCount = 3
     $imageStoreConnectionString = "fabric:ImageStore"
@@ -58,7 +58,7 @@ else
     $bandCreationInstanceCount = 1
     $countyServicePartitionCount = @{$true=1;$false=2}[$singleNode -eq $true]  
     $bandActorServicePartitionCount = @{$true=1;$false=2}[$singleNode -eq $true]  
-    $doctorActorServicePartitionCount = @{$true=1;$false=2}[$singleNode -eq $true]  
+    $doctorServicePartitionCount = @{$true=1;$false=2}[$singleNode -eq $true]  
     $imageStoreConnectionString = "file:C:\SfDevCluster\Data\ImageStoreShare"
     $bandsPerService = "300"
 }
@@ -97,8 +97,8 @@ $countyServiceReplicaCount = @{$true=1;$false=$targetReplicaCount}[$singleNode -
 $bandCreationServiceType = "HealthMetrics.BandCreationServiceType"
 $bandCreationServiceName = "HealthMetrics.BandCreationService"
 
-$doctorActorServiceType = "DoctorActorServiceType"
-$doctorActorServiceName = "HealthMetrics.DoctorActorService"
+$doctorServiceType = "HealthMetrics.DoctorServiceType"
+$doctorServiceName = "HealthMetrics.DoctorService"
 $doctorServiceReplicaCount = @{$true=1;$false=$targetReplicaCount}[$singleNode -eq $true]
 
 $bandActorServiceType = "BandActorServiceType"
@@ -157,7 +157,7 @@ New-ServiceFabricService -ServiceTypeName $nationalServiceType -Stateful -HasPer
 New-ServiceFabricService -ServiceTypeName $countyServiceType -Stateful -HasPersistedState -ApplicationName $appName -ServiceName "$appName/$countyServiceName" -PartitionSchemeUniformInt64 -LowKey $countyLowKey -HighKey $countyHighKey -PartitionCount $countyServicePartitionCount -MinReplicaSetSize $countyServiceReplicaCount -TargetReplicaSetSize $countyServiceReplicaCount -PlacementConstraint $countyServiceConstraint -ServicePackageActivationMode ExclusiveProcess
 
 #create doctor
-New-ServiceFabricService -ServiceTypeName $doctorActorServiceType -Stateful -ApplicationName $appName -ServiceName "$appName/$doctorActorServiceName" -PartitionSchemeUniformInt64 -LowKey $lowkey -HighKey $highkey -PartitionCount $doctorActorServicePartitionCount -MinReplicaSetSize $doctorServiceReplicaCount -TargetReplicaSetSize $doctorServiceReplicaCount -PlacementConstraint $doctorServiceConstraint -ServicePackageActivationMode ExclusiveProcess
+New-ServiceFabricService -ServiceTypeName $doctorServiceType -Stateful -HasPersistedState -ApplicationName $appName -ServiceName "$appName/$doctorServiceName" -PartitionSchemeUniformInt64 -LowKey $lowkey -HighKey $highkey -PartitionCount $doctorServicePartitionCount -MinReplicaSetSize $doctorServiceReplicaCount -TargetReplicaSetSize $doctorServiceReplicaCount -PlacementConstraint $doctorServiceConstraint -ServicePackageActivationMode ExclusiveProcess
 
 #create band
 New-ServiceFabricService -ServiceTypeName $bandActorServiceType -Stateful -ApplicationName $appName -ServiceName "$appName/$bandActorServiceName" -PartitionSchemeUniformInt64 -LowKey $lowkey -HighKey $highkey -PartitionCount $bandActorServicePartitionCount -MinReplicaSetSize $bandActorReplicaCount -TargetReplicaSetSize $bandActorReplicaCount -PlacementConstraint $bandServiceConstraint -ServicePackageActivationMode ExclusiveProcess

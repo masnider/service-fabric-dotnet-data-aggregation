@@ -8,9 +8,6 @@
     <Parameter Name="DoctorServiceInstanceName" DefaultValue="HealthMetrics.DoctorService" />
     <Parameter Name="CountyServiceInstanceName" DefaultValue="HealthMetrics.CountyService" />
     <Parameter Name="NationalServiceInstanceName" DefaultValue="HealthMetrics.NationalService" />
-    <Parameter Name="BandActorService_PartitionCount" DefaultValue="10" />
-    <Parameter Name="BandActorService_MinReplicaSetSize" DefaultValue="1" />
-    <Parameter Name="BandActorService_TargetReplicaSetSize" DefaultValue="1" />
   </Parameters>
   <ServiceManifestImport>
     <ServiceManifestRef ServiceManifestName="HealthMetrics.BandCreationServicePkg" ServiceManifestVersion="1.0.0.0" />
@@ -89,11 +86,4 @@
       </ConfigOverride>
     </ConfigOverrides>
   </ServiceManifestImport>
-  <DefaultServices>
-    <Service Name="BandActorService" GeneratedIdRef="2f6a582a-857e-400d-941c-da6fda3ece8d|None">
-      <StatefulService ServiceTypeName="BandActorServiceType" TargetReplicaSetSize="[BandActorService_TargetReplicaSetSize]" MinReplicaSetSize="[BandActorService_MinReplicaSetSize]">
-        <UniformInt64Partition PartitionCount="[BandActorService_PartitionCount]" LowKey="-9223372036854775808" HighKey="9223372036854775807" />
-      </StatefulService>
-    </Service>
-  </DefaultServices>
 </ApplicationManifest>

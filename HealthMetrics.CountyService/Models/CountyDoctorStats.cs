@@ -7,24 +7,35 @@ namespace HealthMetrics.CountyService
 {
     using HealthMetrics.Common;
     using ProtoBuf;
+    using System.Runtime.Serialization;
 
+    [DataContract]
     [ProtoContract]
     public struct CountyDoctorStats
     {
-        public CountyDoctorStats(int patientCount, long healthReportCount, HealthIndex averageHealthIndex)
+        public CountyDoctorStats(int patientCount, long healthReportCount, string doctorName, HealthIndex averageHealthIndex)
         {
+            this.DoctorName = doctorName;
             this.PatientCount = patientCount;
             this.HealthReportCount = healthReportCount;
             this.AverageHealthIndex = averageHealthIndex;
         }
 
+
+        [DataMember]
         [ProtoMember(1)]
+        public string DoctorName { get; private set; }
+
+        [DataMember]
+        [ProtoMember(2)]
         public int PatientCount { get; private set; }
 
-        [ProtoMember(2)]
+        [DataMember]
+        [ProtoMember(3)]
         public long HealthReportCount { get; private set; }
 
-        [ProtoMember(3)]
+        [DataMember]
+        [ProtoMember(4)]
         public HealthIndex AverageHealthIndex { get; private set; }
     }
 }
