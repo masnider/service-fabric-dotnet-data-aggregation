@@ -3,6 +3,10 @@
   <Section Name="DoctorActorServiceReplicatorConfig">
     <Parameter Name="BatchAcknowledgementInterval" Value="0.005" />
     <Parameter Name="ReplicatorEndpoint" Value="DoctorActorServiceReplicatorEndpoint" />
+    <Parameter Name="MaxPrimaryReplicationQueueMemorySize" Value="104857600" />
+    <Parameter Name="MaxPrimaryReplicationQueueSize" Value="0" />
+    <Parameter Name="MaxSecondaryReplicationQueueMemorySize" Value="104857600" />
+    <Parameter Name="MaxSecondaryReplicationQueueSize" Value="0" />
   </Section>
   <Section Name="DoctorActorServiceReplicatorSecurityConfig">
     <Parameter Name="CredentialType" Value="None" />

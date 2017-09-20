@@ -1,5 +1,5 @@
 ﻿$cloud = $false
-$singleNode = $true
+$singleNode = $false
 $constrainedNodeTypes = $false
 
 $lowkey = "-9223372036854775808"
@@ -14,16 +14,16 @@ $appInitialVersion = "1.0.0.0"
 
 if($singleNode)
 {
-    $webServiceInstanceCount = -1
-    $bandCreationInstanceCount = -1
+    $webServiceInstanceCount = 1
+    $bandCreationInstanceCount = 1
     $countyServicePartitionCount = 1
     $bandActorServicePartitionCount = 1
     $doctorActorServicePartitionCount = 1
 }
 else
 {
-    $webServiceInstanceCount = 1
-    $bandCreationInstanceCount = 1
+    $webServiceInstanceCount = @{$true=-1;$false=1}[$cloud -eq $true]
+    $bandCreationInstanceCount = @{$true=-1;$false=1}[$cloud -eq $true]
     $countyServicePartitionCount = @{$true=10;$false=2}[$cloud -eq $true]  
     $bandActorServicePartitionCount = @{$true=10;$false=2}[$cloud -eq $true]  
     $doctorActorServicePartitionCount = @{$true=10;$false=2}[$cloud -eq $true]  

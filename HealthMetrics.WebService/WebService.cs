@@ -36,7 +36,8 @@ namespace HealthMetrics.WebService
                         ServiceEventSource.Current.ServiceMessage(serviceContext, $"Starting WebListener on {url}");
 
                         return new WebHostBuilder()
-                                    .UseKestrel()
+                                    .UseWebListener()
+                                    //.UseKestrel()
                                     .ConfigureServices(
                                         services => services
                                             .AddSingleton<StatelessServiceContext>(serviceContext))

@@ -162,6 +162,14 @@ namespace HealthMetrics.CountyService
                         "CountyService encountered an exception trying to send data to National Service: FabricTransientException in RunAsync: {0}",
                         fte.ToString());
                 }
+                catch (HttpRequestException hre)
+                {
+                    // transient error. Retry.
+                    ServiceEventSource.Current.ServiceMessage(
+                        this,
+                        "CountyService encountered an exception trying to send data to National Service: HTTPRequestException in RunAsync: {0}",
+                        hre.ToString());
+                }
                 catch (FabricNotPrimaryException)
                 {
                     // not primary any more, time to quit.
