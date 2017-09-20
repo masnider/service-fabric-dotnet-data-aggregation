@@ -13,7 +13,7 @@ $constrainedNodeTypes = $false
 
 if($cloud)
 {
-    $cloudAddress = "xrg3.trafficmanager.net"
+    $cloudAddress = "xrg9.trafficmanager.net"
 }
 
 if($certSecure)
