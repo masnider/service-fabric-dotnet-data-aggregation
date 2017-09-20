@@ -3,7 +3,7 @@
   "private": true,
   "dependencies": {
     "angular": "1.6.6",
-    "Jquery": "3.2.1",
+    "jQuery": "3.2.1",
     "topojson": "3.0.0",
     "d3": "4.10.0",
     "d3-composite-projections": "1.2.0",
