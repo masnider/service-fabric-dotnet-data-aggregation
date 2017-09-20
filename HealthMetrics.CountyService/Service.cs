@@ -126,7 +126,7 @@ namespace HealthMetrics.CountyService
 
                         if (records.Count > 0)
                         {
-                            avgHealth  = this.indexCalculator.ComputeAverageIndex(records.Select(x => x.Value.AverageHealthIndex));
+                            avgHealth = this.indexCalculator.ComputeAverageIndex(records.Select(x => x.Value.AverageHealthIndex));
                         }
                         else
                         {
@@ -177,6 +177,13 @@ namespace HealthMetrics.CountyService
                 {
                     // not primary any more, time to quit.
                     return;
+                }
+                catch (HttpRequestException hre)
+                {
+                    ServiceEventSource.Current.ServiceMessage(
+                        this,
+                        "CountyService encountered an exception trying to send data to National Service: HttpRequestException in RunAsync: {0}",
+                        hre.ToString());
                 }
                 catch (Exception ex)
                 {

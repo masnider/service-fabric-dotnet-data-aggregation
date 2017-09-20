@@ -18,6 +18,7 @@ using System.Collections.Concurrent;
 using System.Net.Http;
 using BladeRuiner.Common.ServiceUtilities;
 using Microsoft.ServiceFabric.Services.Client;
+using HealthMetrics.CountyService.Models;
 
 namespace HealthMetrics.DoctorService
 {
@@ -41,6 +42,8 @@ namespace HealthMetrics.DoctorService
             this.scr = new ServiceConfigReader("Config");
             ServiceUriBuilder serviceUriBuilder = new ServiceUriBuilder(this.scr["HealthMetrics.DoctorService.Settings"]["CountyServiceInstanceName"]);
             this.CountyServiceUri = serviceUriBuilder.ToUri();
+            this.StateManager.TryAddStateSerializer<DoctorCreationRecord>(new DoctorCreationRecordSerializer());
+            this.StateManager.TryAddStateSerializer<PatientRegistrationRecord>(new PatientRegistrationRecordSerializer());
         }
 
         /// <summary>
@@ -76,47 +79,39 @@ namespace HealthMetrics.DoctorService
 
             while (!cancellationToken.IsCancellationRequested)
             {
-
                 try
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(5));
+                    await Task.Delay(TimeSpan.FromSeconds(1));
 
                     ConcurrentDictionary<int, List<KeyValuePair<Guid, string>>> countyDoctorMap = new ConcurrentDictionary<int, List<KeyValuePair<Guid, string>>>();
 
-                    try
+                    using (ITransaction tx = this.StateManager.CreateTransaction())
                     {
-                        using (ITransaction tx = this.StateManager.CreateTransaction())
+                        var doctorDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, DoctorCreationRecord>>(DoctorRegistrationDictionaryName);
+                        var enumerator = (await doctorDictionary.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
+
+                        while (await enumerator.MoveNextAsync(cancellationToken))
                         {
-                            var doctorDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, DoctorCreationRecord>>(DoctorRegistrationDictionaryName);
-                            var enumerator = (await doctorDictionary.CreateEnumerableAsync(tx)).GetAsyncEnumerator();
 
-                            while (await enumerator.MoveNextAsync(cancellationToken))
-                            {
+                            var doctorListItem = enumerator.Current;
+                            Guid doctorId = doctorListItem.Key;
+                            int countyId = doctorListItem.Value.CountyInfo.CountyId;
+                            string name = doctorListItem.Value.DoctorName;
 
-                                var doctorListItem = enumerator.Current;
-                                Guid doctorId = doctorListItem.Key;
-                                int countyId = doctorListItem.Value.CountyInfo.CountyId;
-                                string name = doctorListItem.Value.DoctorName;
+                            //TODO: Evaluate if this will correctly always add, or if it will get overwritten
+                            countyDoctorMap.AddOrUpdate(
+                                countyId,
+                                new List<KeyValuePair<Guid, string>>() { new KeyValuePair<Guid, string>(doctorId, name) },
+                                (id, existingList) =>
+                                    {
+                                        existingList.Add(new KeyValuePair<Guid, string>(doctorId, name));
+                                        return existingList;
+                                    }
+                             );
 
-                                //TODO: Evaluate if this will correctly always add, or if it will get overwritten
-                                countyDoctorMap.AddOrUpdate(
-                                    countyId,
-                                    new List<KeyValuePair<Guid, string>>() { new KeyValuePair<Guid, string>(doctorId, name) },
-                                    (id, existingList) =>
-                                        {
-                                            existingList.Add(new KeyValuePair<Guid, string>(doctorId, name));
-                                            return existingList;
-                                        }
-                                 );
-                            }
-
-                            await tx.CommitAsync();
                         }
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                        throw;
+
+                        await tx.CommitAsync();
                     }
 
                     foreach (KeyValuePair<int, List<KeyValuePair<Guid, string>>> info in countyDoctorMap) //should actually be able to do these in parallel
@@ -133,44 +128,36 @@ namespace HealthMetrics.DoctorService
 
                             var doctorMetadataDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, long>>(doctorMetadataDictionaryName);
 
-                            try
+                            using (ITransaction tx = this.StateManager.CreateTransaction())
                             {
-                                using (ITransaction tx = this.StateManager.CreateTransaction())
+                                var reportCountResult = await doctorMetadataDictionary.TryGetValueAsync(tx, "HealthReportCount");
+                                if (reportCountResult.HasValue)
                                 {
-                                    var reportCountResult = await doctorMetadataDictionary.TryGetValueAsync(tx, "HealthReportCount");
-                                    if (reportCountResult.HasValue)
-                                    {
-                                        healthReportCount = reportCountResult.Value;
-                                    }
-
-                                    var patientCountResult = await doctorMetadataDictionary.TryGetValueAsync(tx, "PatientCount");
-                                    if (patientCountResult.HasValue)
-                                    {
-                                        patientCount = (int)patientCountResult.Value;
-                                    }
-
-                                    await tx.CommitAsync();
+                                    healthReportCount = reportCountResult.Value;
                                 }
-                            }
-                            catch (Exception e)
-                            {
-                                Console.WriteLine(e);
-                                throw;
+
+                                var patientCountResult = await doctorMetadataDictionary.TryGetValueAsync(tx, "PatientCount");
+                                if (patientCountResult.HasValue)
+                                {
+                                    patientCount = (int)patientCountResult.Value;
+                                }
+
+                                await tx.CommitAsync();
                             }
 
                             HealthIndex avgHealthIndex = await GetAveragePatientHealthInfoAsync(docInfo.Key, cancellationToken);
                             countyDoctorStats.Add(new DoctorStatsViewModel(docInfo.Key, info.Key, patientCount, healthReportCount, avgHealthIndex, docInfo.Value));
-
-                            await FabricHttpClient.MakePostRequest<string, List<DoctorStatsViewModel>>(
-                                this.CountyServiceUri,
-                                new ServicePartitionKey(info.Key),
-                                "ServiceEndpoint",
-                                "county/health/",
-                                countyDoctorStats,
-                                SerializationSelector.PBUF,
-                                cancellationToken
-                                );
                         }
+
+                        await FabricHttpClient.MakePostRequest<string, List<DoctorStatsViewModel>>(
+                            this.CountyServiceUri,
+                            new ServicePartitionKey(info.Key),
+                            "ServiceEndpoint",
+                            "county/health/",
+                            countyDoctorStats,
+                            SerializationSelector.PBUF,
+                            cancellationToken
+                            );
                     }
                 }
                 catch (TimeoutException te)
@@ -209,12 +196,6 @@ namespace HealthMetrics.DoctorService
                 }
 
             }
-            //get all doctors
-            //for each doctor get
-            //new DoctorStatsViewModel(doctorId, countyId, numberofpatientsforthisdoctor, numberofhealthreportsforthisdoctor, doctoraveragehealthindex)
-            //group by county
-            //send to countysvc
-
         }
 
 

@@ -16,7 +16,6 @@ namespace HealthMetrics.DoctorService.Controllers
 
         private readonly IReliableStateManager StateManager;
         private static readonly string DoctorRegistrationDictionaryName = "DoctorRegistrationDictionaryName";
-        //private static readonly string MetadataDictionaryName = "MetadataDictionaryName";
         private static readonly string DoctorMetadataDictionaryName = "Doctor_{0}_Metadata";
         private static readonly string DoctorPatientDictionaryName = "Doctor_{0}_Patients";
 
@@ -29,26 +28,24 @@ namespace HealthMetrics.DoctorService.Controllers
         [Route("new/{doctorId}")]
         public async Task NewDoctorAsync(Guid doctorId, [FromBody]DoctorCreationRecord record)
         {
+            string doctorDictionaryName = String.Format(DoctorPatientDictionaryName, doctorId);
+            string doctorMetadataDictionaryName = String.Format(DoctorMetadataDictionaryName, doctorId);
+
             try
             {
+                //doctordictionary is just a list of GuidId to the actual doctor information
                 var doctorDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, DoctorCreationRecord>>(DoctorRegistrationDictionaryName);
-                //var metadataDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, long>>(MetadataDictionaryName);
 
                 //create the dictionary which holds patients for this doctor
-                await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, PatientRegistrationRecord>>(String.Format(DoctorPatientDictionaryName, doctorId));
-                //create the dictionary which holds metadatafor this doctor
-                await this.StateManager.GetOrAddAsync<IReliableDictionary<string, long>>(String.Format(DoctorMetadataDictionaryName, doctorId));
+                await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, PatientRegistrationRecord>>(doctorDictionaryName);
 
-
-                //long totalDoctorCount = -1;
+                //create the dictionary which holds metadata for this doctor
+                await this.StateManager.GetOrAddAsync<IReliableDictionary<string, long>>(doctorMetadataDictionaryName);
 
                 using (ITransaction tx = this.StateManager.CreateTransaction())
                 {
                     if (!((await doctorDictionary.TryGetValueAsync(tx, doctorId)).HasValue))
                     {
-                        //increase the total number of doctors
-                        //totalDoctorCount = await metadataDictionary.AddOrUpdateAsync(tx, "DoctorCount", 1, (key, value) => value + 1);
-
                         //add this doctor to the list of doctors
                         await doctorDictionary.SetAsync(tx, doctorId, record);
                     }
@@ -58,9 +55,12 @@ namespace HealthMetrics.DoctorService.Controllers
             }
             catch (Exception e)
             {
-                var z = e;
+                // transient error. Retry.
+                ServiceEventSource.Current.Message("Exception in DoctorController, NewDoctor {0}", e.ToString());
                 throw;
             }
+
+            ServiceEventSource.Current.Message("Successfully registered doctor {0}. PL: {1} D: {2}", doctorId, doctorDictionaryName, doctorMetadataDictionaryName);
             return;
         }
 
@@ -68,21 +68,19 @@ namespace HealthMetrics.DoctorService.Controllers
         [Route("new/patient/{doctorId}")]
         public async Task RegisterPatientAsync(Guid doctorId, [FromBody]PatientRegistrationRecord record)
         {
+            string doctorPatientDictionaryName = String.Format(DoctorPatientDictionaryName, doctorId);
+            string doctorMetadataDictionaryName = String.Format(DoctorMetadataDictionaryName, doctorId);
+            long doctorPatientCount = -1;
 
             try
             {
-                var doctorPatientDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, PatientRegistrationRecord>>(String.Format(DoctorPatientDictionaryName, doctorId));
-                var doctorMetadataDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, long>>(String.Format(DoctorMetadataDictionaryName, doctorId));
-                //var metadataDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, long>>(MetadataDictionaryName);
-
-                //long totalPatientCount = -1;
-                long doctorPatientCount = -1;
+                var doctorPatientDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<Guid, PatientRegistrationRecord>>(doctorPatientDictionaryName);
+                var doctorMetadataDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, long>>(doctorMetadataDictionaryName);
 
                 using (ITransaction tx = this.StateManager.CreateTransaction())
                 {
                     if (!(await doctorPatientDictionary.TryGetValueAsync(tx, record.PatientId)).HasValue)
                     {
-                        //totalPatientCount = await metadataDictionary.AddOrUpdateAsync(tx, "PatientCount", 1, (key, value) => value + 1);
                         await doctorPatientDictionary.SetAsync(tx, record.PatientId, record);
                         doctorPatientCount = await doctorMetadataDictionary.AddOrUpdateAsync(tx, "PatientCount", 1, (key, value) => value + 1);
                     }
@@ -92,12 +90,12 @@ namespace HealthMetrics.DoctorService.Controllers
             }
             catch (Exception e)
             {
-                var z = e;
+                // transient error. Retry.
+                ServiceEventSource.Current.Message("Exception in DoctorController RegisterPatient {0}", e.ToString());
                 throw;
             }
 
-
-
+            ServiceEventSource.Current.Message("Successfully registered patient {0}. PL: {1} D: {2} Count {3}", doctorId, doctorPatientDictionaryName, doctorMetadataDictionaryName, doctorPatientCount);
             return;
         }
 
@@ -106,27 +104,27 @@ namespace HealthMetrics.DoctorService.Controllers
         [Route("health/{doctorId}/{personId}")]
         public async Task ReportPatientHealthAsync(Guid doctorId, Guid personId, [FromBody]HeartRateRecord latestHeartRateRecord)
         {
+            string doctorMetadataDictionaryName = String.Format(DoctorMetadataDictionaryName, doctorId);
+            long doctorHealthReportCount = -1;
+
             try
             {
-                var doctorMetadataDictionaryName = String.Format(DoctorMetadataDictionaryName, doctorId);
                 var doctorMetadataDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, long>>(doctorMetadataDictionaryName);
-                //var metadataDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, long>>(MetadataDictionaryName);
-
-                //long totalReports = -1;
-                long doctorReports = -1;
 
                 using (ITransaction tx = this.StateManager.CreateTransaction())
                 {
-                    //totalReports = await metadataDictionary.AddOrUpdateAsync(tx, "HealthReportCount", 1, (key, value) => value + 1);
-                    doctorReports = await doctorMetadataDictionary.AddOrUpdateAsync(tx, "HealthReportCount", 1, (key, value) => value + 1);
+                    doctorHealthReportCount = await doctorMetadataDictionary.AddOrUpdateAsync(tx, "HealthReportCount", 1, (key, value) => value + 1);
                     await tx.CommitAsync();
                 }
             }
             catch (Exception e)
             {
-                var z = e;
+                // transient error. Retry.
+                ServiceEventSource.Current.Message("Exception in DoctorController Report Patient Health {0}", e.ToString());
                 throw;
             }
+
+            ServiceEventSource.Current.Message("Successfully handled patient health reprot D_ID {0} P_ID {1} Count {2}", doctorId, personId, doctorHealthReportCount);
             return;
         }
     }

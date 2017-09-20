@@ -172,8 +172,10 @@ namespace HealthMetrics.WebService.Controllers
                 ServiceUriBuilder serviceUri = new ServiceUriBuilder(this.GetSetting(BandServiceName));
 
                 IBandActor actor = ActorProxy.Create<IBandActor>(bandActorId, serviceUri.ToUri());
+                var result = await actor.GetBandDataAsync();
 
-                return await actor.GetBandDataAsync();
+
+                return result;
             }
             catch (AggregateException ae)
             {

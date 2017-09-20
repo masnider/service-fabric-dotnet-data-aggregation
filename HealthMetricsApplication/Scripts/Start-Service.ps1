@@ -1,5 +1,5 @@
 ﻿$cloud = $false
-$singleNode = $true
+$singleNode = $false
 $constrainedNodeTypes = $false
 
 $lowkey = "-9223372036854775808"
@@ -61,10 +61,6 @@ $countyServiceReplicaCount = @{$true=1;$false=3}[$singleNode -eq $true]
 
 $bandCreationServiceType = "HealthMetrics.BandCreationServiceType"
 $bandCreationServiceName = "HealthMetrics.BandCreationService"
-
-#$doctorActorServiceType = "DoctorActorServiceType"
-#$doctorActorServiceName = "HealthMetrics.DoctorActorService"
-#$doctorServiceReplicaCount = @{$true=1;$false=3}[$singleNode -eq $true]
 
 $doctorServiceType = "HealthMetrics.DoctorServiceType"
 $doctorServiceName = "HealthMetrics.DoctorService"

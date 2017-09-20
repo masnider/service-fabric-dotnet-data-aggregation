@@ -5,15 +5,15 @@
 #or the application parameters mechanism provided via the VS tooling. It is meant to serve as an example
 #of manual application and service creation and configuration. 
 
-$cloud = $false
-$singleNode = $true
+$cloud = $true
+$singleNode = $false
 $certSecure = $false
 $AADSecure = $false
 $constrainedNodeTypes = $false
 
 if($cloud)
 {
-    $cloudAddress = "xrg8.trafficmanager.net"
+    $cloudAddress = "xrg9.trafficmanager.net"
 }
 
 if($certSecure)
@@ -43,7 +43,7 @@ if($cloud)
     $clusterAddress = $cloudAddress+":19000"
     $webServiceInstanceCount = -1
     $bandCreationInstanceCount = -1
-    $bandsPerService = "750"
+    $bandsPerService = "3000"
     $countyServicePartitionCount = @{$true=1;$false=30}[$singleNode -eq $true]
     $bandActorServicePartitionCount = @{$true=1;$false=30}[$singleNode -eq $true]
     $doctorServicePartitionCount = @{$true=1;$false=30}[$singleNode -eq $true]
@@ -54,6 +54,7 @@ if($cloud)
 else
 {
     $clusterAddress = "127.0.0.1:19000"
+
     $webServiceInstanceCount = 1
     $bandCreationInstanceCount = 1
     $countyServicePartitionCount = @{$true=1;$false=2}[$singleNode -eq $true]  
@@ -137,6 +138,7 @@ while($true)
     }
     else
     {
+        write-host "Waiting for application registration to complete..."
         sleep 2
     }
 }

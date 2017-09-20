@@ -46,8 +46,8 @@ namespace System.Net.Http
             clientFactory = new HttpCommunicationClientFactory(
                 ServicePartitionResolver.GetDefault(),
                 "endpointName",
-                TimeSpan.FromSeconds(2),
-                TimeSpan.FromSeconds(2));
+                TimeSpan.FromSeconds(10),
+                TimeSpan.FromSeconds(5));
 
             jSerializer = new JsonSerializer();  //todo - see if creating this on the fly is better or not 
         }
@@ -120,6 +120,7 @@ namespace System.Net.Http
             return servicePartitionClient.InvokeWithRetryAsync(
                 async client =>
                 {
+                    HttpRequestMessage msg = null;
                     HttpResponseMessage response = null;
 
                     try
@@ -140,7 +141,7 @@ namespace System.Net.Http
 
                             case HttpVerb.GET:
 
-                                HttpRequestMessage msg = new HttpRequestMessage(HttpMethod.Get, newUri);
+                                msg = new HttpRequestMessage(HttpMethod.Get, newUri);
 
                                 if (selector == SerializationSelector.PBUF)
                                 {
@@ -157,20 +158,12 @@ namespace System.Net.Http
                             case HttpVerb.POST:
                                 if (selector == SerializationSelector.JSON)
                                 {
-                                    //response = await httpClient.PostAsJsonAsync<TPayload>(newUri, payload);
                                     response = await httpClient.PostAsync(newUri, new JsonContent(payload));
                                 }
                                 else if (selector == SerializationSelector.PBUF)
                                 {
-                                    try
-                                    {
-                                        response = await httpClient.PostAsync(newUri, new ProtoContent(payload));
-                                    }
-                                    catch(Exception e)
-                                    {
-                                        Console.WriteLine(e);
-                                        throw;
-                                    }
+
+                                    response = await httpClient.PostAsync(newUri, new ProtoContent(payload));
                                 }
                                 break;
 
@@ -178,8 +171,7 @@ namespace System.Net.Http
                                 throw new ArgumentException("Unsupported HTTP Verb submitted for HTTP message in HTTPClientExtension");
                         }
 
-                        TReturn value;
-                        return value = (selector == SerializationSelector.JSON) ? await ReturnJsonResult<TReturn>(response) : await ReturnPBufResult<TReturn>(response);
+                        return (selector == SerializationSelector.JSON) ? await ReturnJsonResult<TReturn>(response) : await ReturnPBufResult<TReturn>(response);
 
                     }
                     catch (Exception e)

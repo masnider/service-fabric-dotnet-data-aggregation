@@ -89,7 +89,7 @@ namespace HealthMetrics.BandActor
             this.doctorServicePartitionKey = new ServicePartitionKey(HashUtil.getLongHashCode(info.DoctorId.ToString()));
             await this.RegisterRegistrationReminder();
 
-            ActorEventSource.Current.ActorMessage(this, "Band created. ID: {0}, Name: {1}, Doctor ID: {2}", this.Id, info.PersonName, info.DoctorId);
+            //ActorEventSource.Current.ActorMessage(this, "Band created. ID: {0}, Name: {1}, Doctor ID: {2}", this.Id, info.PersonName, info.DoctorId);
         }
 
         async Task IRemindable.ReceiveReminderAsync(string reminderName, byte[] context, TimeSpan dueTime, TimeSpan period)
@@ -108,7 +108,7 @@ namespace HealthMetrics.BandActor
                     break;
 
                 default:
-                    ActorEventSource.Current.Message("Reminder {0} is not implemented on BandActor.", reminderName);
+                    //ActorEventSource.Current.Message("Reminder {0} is not implemented on BandActor.", reminderName);
                     break;
             }
 
@@ -145,7 +145,7 @@ namespace HealthMetrics.BandActor
             this.UpdateConfigSettings(configPackage.Settings);
             this.ActorService.Context.CodePackageActivationContext.ConfigurationPackageModifiedEvent +=
                 this.CodePackageActivationContext_ConfigurationPackageModifiedEvent;
-            ActorEventSource.Current.ActorMessage(this, "Band activated. ID: {0}", this.Id);
+            //ActorEventSource.Current.ActorMessage(this, "Band activated. ID: {0}", this.Id);
             return Task.FromResult(true);
         }
 
@@ -209,12 +209,12 @@ namespace HealthMetrics.BandActor
 
         private async Task RegisterHealthReportReminder()
         {
-            await this.RegisterReminderAsync(GenerateAndSendHealthReportReminderName, null, TimeSpan.FromSeconds(this.random.Next(1, 30)), TimeSpan.FromSeconds(5));
+            await this.RegisterReminderAsync(GenerateAndSendHealthReportReminderName, null, TimeSpan.FromSeconds(this.random.Next(1, 10)), TimeSpan.FromSeconds(1));
         }
 
         private async Task RegisterRegistrationReminder()
         {
-            this.registrationReminder = await this.RegisterReminderAsync(RegisterPatientReminderName, null, TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(1));
+            this.registrationReminder = await this.RegisterReminderAsync(RegisterPatientReminderName, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(0));
         }
     }
 }

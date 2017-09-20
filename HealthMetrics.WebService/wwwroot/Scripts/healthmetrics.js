@@ -22,18 +22,18 @@ function MetricsApp() {
 
     this.Initialize = function () {
 
+        var rollingAverage = {
+            currentAverage: 0,
+            currentCount: 0,
+            last: 0
+        };
+
+        setInterval(function () { self.UpdateStats(rollingAverage); }, 1000);
+
         api.GetIds(function (result) {
-
-            var rollingAverage = {
-                currentAverage: 0,
-                currentCount: 0,
-                last: 0
-            };
-
             self.currentBandId = result.key;
             self.currentDoctorId = result.value;
-            self.SetUserContext();
-            setInterval(function () { self.UpdateStats(rollingAverage); }, 1000);
+            self.SetUserContext();            
             setInterval(self.UpdateUserInfo, 2000);
         });
 
@@ -130,7 +130,7 @@ function MetricsApp() {
 
             var bptickpoints = [];
 
-            var bpTickCount = 1;
+            //var bpTickCount = 1;
 
             if (patientData.heartRateHistory.length > 0) {
 
@@ -138,7 +138,7 @@ function MetricsApp() {
                     var tick = [];
                     tick.push(self.FormatDateTime(jObject.timestamp.dateTimeString));
                     tick.push(jObject.heartRate);
-                    bpTickCount++;
+                    //bpTickCount++;
                     bptickpoints.push(tick);
                 });
 

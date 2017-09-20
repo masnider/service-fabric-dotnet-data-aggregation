@@ -78,6 +78,7 @@ namespace HealthMetrics.CountyService
         [Route("county/health")]
         public async Task Post([FromBody] List<DoctorStatsViewModel> stats)
         {
+
             try
             {                
                 IReliableDictionary<int, string> countyNameDictionary =
@@ -85,6 +86,8 @@ namespace HealthMetrics.CountyService
 
                 foreach (var stat in stats)
                 {
+                    ServiceEventSource.Current.Message("Saving for county {0}", stat.countyId);
+
                     IReliableDictionary<Guid, CountyDoctorStats> countyHealth =
                         await
                             this.stateManager.GetOrAddAsync<IReliableDictionary<Guid, CountyDoctorStats>>(

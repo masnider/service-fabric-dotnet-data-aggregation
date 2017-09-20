@@ -1,11 +1,10 @@
-﻿$cloud = $false
-$singleNode = $true
+﻿$cloud = $true
 $certSecure = $false
 $AADSecure = $false
 
 if($cloud)
 {
-    $cloudAddress = "xrg3.trafficmanager.net"
+    $cloudAddress = "xrg9.trafficmanager.net"
     $clusterAddress = $cloudAddress+":19000"
 }
 else
