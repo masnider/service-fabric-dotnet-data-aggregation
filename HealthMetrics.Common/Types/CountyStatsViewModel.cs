@@ -30,5 +30,10 @@ namespace HealthMetrics.Common
 
         [ProtoMember(4)]
         public HealthIndex AverageHealthIndex { get; private set; }
+
+        public override string ToString()
+        {
+            return string.Format("DC:{0}-PC:{1}-HRC:{2}-HI{3}", this.DoctorCount, this.PatientCount, this.HealthReportCount, this.AverageHealthIndex);
+        }
     }
 }

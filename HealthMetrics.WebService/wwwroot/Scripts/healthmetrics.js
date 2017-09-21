@@ -7,9 +7,6 @@ function MetricsApp() {
     this.currentDoctorId = '';
     this.currentDoctorName = '';
     this.currentPersonName = '';
-    this.countUpOptions = {
-        useEasing: false
-    };
 
     this.RandomElement = function (arr) {
         return arr[Math.floor(Math.random() * arr.length)];
@@ -33,7 +30,11 @@ function MetricsApp() {
         api.GetIds(function (result) {
             self.currentBandId = result.key;
             self.currentDoctorId = result.value;
-            self.SetUserContext();            
+
+            $('.header-title h1').text('Health Metrics');
+            $('.header-title h1').css('color', '#FF8A00');
+            $('#userInfo').show();
+
             setInterval(self.UpdateUserInfo, 2000);
         });
 
@@ -150,14 +151,7 @@ function MetricsApp() {
             self.UpdateDoctorList(patientData.countyInfo.countyId);
         });
     }
-
-    this.SetUserContext = function () {
-        this.currentContext = 'user';
-        $('.header-title h1').text('Health Metrics');
-        $('.header-title h1').css('color', '#FF8A00');
-        $('#userInfo').show();
-    }
-
+    
     this.SetUserName = function (name) {
         $('.login-user h3').text(name);
     };

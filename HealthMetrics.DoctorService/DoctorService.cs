@@ -165,7 +165,7 @@ namespace HealthMetrics.DoctorService
                     // transient error. Retry.
                     ServiceEventSource.Current.ServiceMessage(
                         this.Context,
-                        "CountyService encountered an exception trying to send data to National Service: TimeoutException in RunAsync: {0}",
+                        "DoctorService encountered an exception trying to send data to County Service: TimeoutException in RunAsync: {0}",
                         te.ToString());
                 }
                 catch (FabricNotReadableException fnre)
@@ -173,7 +173,7 @@ namespace HealthMetrics.DoctorService
                     // transient error. Retry.
                     ServiceEventSource.Current.ServiceMessage(
                         this.Context,
-                        "CountyService encountered an exception trying to send data to National Service: FabricNotReadableException in RunAsync: {0}",
+                        "DoctorService encountered an exception trying to send data to County Service: FabricNotReadableException in RunAsync: {0}",
                         fnre.ToString());
                 }
                 catch (FabricTransientException fte)
@@ -181,8 +181,15 @@ namespace HealthMetrics.DoctorService
                     // transient error. Retry.
                     ServiceEventSource.Current.ServiceMessage(
                         this.Context,
-                        "CountyService encountered an exception trying to send data to National Service: FabricTransientException in RunAsync: {0}",
+                        "DoctorService encountered an exception trying to send data to County Service: FabricTransientException in RunAsync: {0}",
                         fte.ToString());
+                }
+                catch (HttpRequestException hre)
+                {
+                    ServiceEventSource.Current.ServiceMessage(
+                        this.Context,
+                        "DoctorService encountered an exception trying to send data to County Service: HttpRequestException in RunAsync: {0}",
+                        hre.ToString());
                 }
                 catch (FabricNotPrimaryException)
                 {

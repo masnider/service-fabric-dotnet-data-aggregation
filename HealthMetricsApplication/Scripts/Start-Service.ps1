@@ -1,5 +1,5 @@
 ﻿$cloud = $false
-$singleNode = $false
+$singleNode = $true
 $constrainedNodeTypes = $false
 
 $lowkey = "-9223372036854775808"
@@ -22,11 +22,11 @@ if($singleNode)
 }
 else
 {
-    $webServiceInstanceCount = 1
-    $bandCreationInstanceCount = 1
-    $countyServicePartitionCount = @{$true=10;$false=2}[$cloud -eq $true]  
-    $bandActorServicePartitionCount = @{$true=10;$false=2}[$cloud -eq $true]  
-    $doctorServicePartitionCount = @{$true=10;$false=2}[$cloud -eq $true]  
+    $webServiceInstanceCount = @{$true=-1;$false=1}[$cloud -eq $true] 
+    $bandCreationInstanceCount = @{$true=-1;$false=1}[$cloud -eq $true] 
+    $countyServicePartitionCount = @{$true=10;$false=5}[$cloud -eq $true]  
+    $bandActorServicePartitionCount = @{$true=10;$false=5}[$cloud -eq $true]  
+    $doctorServicePartitionCount = @{$true=10;$false=5}[$cloud -eq $true]  
 
     if($constrainedNodeTypes)
     {

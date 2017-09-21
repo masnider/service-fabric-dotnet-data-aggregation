@@ -26,7 +26,7 @@ $scriptPath = Get-Item(Convert-Path($MyInvocation.MyCommand.Path))
 $scriptDirectory = Get-Item(Convert-Path($scriptPath.PSParentPath))
 $appDirectory = Get-Item(Convert-Path($scriptDirectory.PSParentPath))
 $rootName = $appDirectory.FullName
-$packagePath = "$rootName\pkg\Debug"
+$packagePath = "$rootName\pkg\Release"
 
 $lowkey = "-9223372036854775808"
 $highkey = "9223372036854775807" 
@@ -38,76 +38,63 @@ $appName = "fabric:/HealthMetrics"
 $appType = "HealthMetrics"
 $appInitialVersion = "1.0.0.0"
 
-if($cloud)
+if($singleNode)
 {
-    $clusterAddress = $cloudAddress+":19000"
     $webServiceInstanceCount = -1
     $bandCreationInstanceCount = -1
-    $bandsPerService = "3000"
-    $countyServicePartitionCount = @{$true=1;$false=30}[$singleNode -eq $true]
-    $bandActorServicePartitionCount = @{$true=1;$false=30}[$singleNode -eq $true]
-    $doctorServicePartitionCount = @{$true=1;$false=30}[$singleNode -eq $true]
-    $targetReplicaCount = 3
-    $minReplicaCount = 3
-    $imageStoreConnectionString = "fabric:ImageStore"
+    $countyServicePartitionCount = 1
+    $bandActorServicePartitionCount = 1
+    $doctorServicePartitionCount = 1
 }
 else
 {
-    $clusterAddress = "127.0.0.1:19000"
+    $webServiceInstanceCount = @{$true=-1;$false=1}[$cloud -eq $true] 
+    $bandCreationInstanceCount = @{$true=-1;$false=1}[$cloud -eq $true] 
+    $countyServicePartitionCount = @{$true=10;$false=5}[$cloud -eq $true]  
+    $bandActorServicePartitionCount = @{$true=15;$false=5}[$cloud -eq $true]  
+    $doctorServicePartitionCount = @{$true=100;$false=5}[$cloud -eq $true]  
 
-    $webServiceInstanceCount = 1
-    $bandCreationInstanceCount = 1
-    $countyServicePartitionCount = @{$true=1;$false=2}[$singleNode -eq $true]  
-    $bandActorServicePartitionCount = @{$true=1;$false=2}[$singleNode -eq $true]  
-    $doctorServicePartitionCount = @{$true=1;$false=2}[$singleNode -eq $true]  
-    $imageStoreConnectionString = "file:C:\SfDevCluster\Data\ImageStoreShare"
-    $bandsPerService = "300"
+    if($constrainedNodeTypes)
+    {
+        $webServiceConstraint = "NodeType == "
+        $countyServiceConstraint = "NodeType == "
+        $nationalServiceConstraint = "NodeType == "
+        $bandServiceConstraint = "NodeType == "
+        $doctorServiceConstraint = "NodeType == "   
+        $bandCreationServiceConstraint = "NodeType == "        
+    }
+    else
+    {
+        $webServiceConstraint = ""
+        $countyServiceConstraint = ""
+        $nationalServiceConstraint = ""
+        $bandServiceConstraint = ""
+        $doctorServiceConstraint = ""
+        $bandCreationServiceConstraint = ""   
+    }
 }
-
-if($constrainedNodeTypes)
-{
-    $webServiceConstraint = "NodeType == "
-    $countyServiceConstraint = "NodeType == "
-    $nationalServiceConstraint = "NodeType == "
-    $bandServiceConstraint = "NodeType == "
-    $doctorServiceConstraint = "NodeType == "   
-    $bandCreationServiceConstraint = "NodeType == "        
-}
-else
-{
-    $webServiceConstraint = ""
-    $countyServiceConstraint = ""
-    $nationalServiceConstraint = ""
-    $bandServiceConstraint = ""
-    $doctorServiceConstraint = ""
-    $bandCreationServiceConstraint = ""   
-}
-
 
 $webServiceType = "HealthMetrics.WebServiceType"
 $webServiceName = "HealthMetrics.WebService"
 
 $nationalServiceType = "HealthMetrics.NationalServiceType"
 $nationalServiceName = "HealthMetrics.NationalService"
-$nationalServiceReplicaCount = @{$true=1;$false=$targetReplicaCount}[$singleNode -eq $true]  
+$nationalServiceReplicaCount = @{$true=1;$false=3}[$singleNode -eq $true]  
 
 $countyServiceType = "HealthMetrics.CountyServiceType"
 $countyServiceName = "HealthMetrics.CountyService"
-$countyServiceReplicaCount = @{$true=1;$false=$targetReplicaCount}[$singleNode -eq $true]  
+$countyServiceReplicaCount = @{$true=1;$false=3}[$singleNode -eq $true]  
 
 $bandCreationServiceType = "HealthMetrics.BandCreationServiceType"
 $bandCreationServiceName = "HealthMetrics.BandCreationService"
 
 $doctorServiceType = "HealthMetrics.DoctorServiceType"
 $doctorServiceName = "HealthMetrics.DoctorService"
-$doctorServiceReplicaCount = @{$true=1;$false=$targetReplicaCount}[$singleNode -eq $true]
+$doctorServiceReplicaCount = @{$true=1;$false=3}[$singleNode -eq $true]
 
 $bandActorServiceType = "BandActorServiceType"
 $bandActorServiceName= "HealthMetrics.BandActorService"
-$bandActorReplicaCount = @{$true=1;$false=$targetReplicaCount}[$singleNode -eq $true]
-
-$parameters = @{}
-$parameters.Add("MaxBandsToCreatePerServiceInstance", $bandsPerService)
+$bandActorReplicaCount = @{$true=1;$false=3}[$singleNode -eq $true]
 
 Write-Host "Connecting to $clusterAddress"
 
@@ -138,7 +125,6 @@ while($true)
     }
     else
     {
-        write-host "Waiting for application registration to complete..."
         sleep 2
     }
 }
